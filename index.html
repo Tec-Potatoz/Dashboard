@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home">
+<title>Home Dashboard</title>
+<style>
+/* Written for old iPad Safari (iOS 9+): flexbox with -webkit- prefixes, no CSS grid, no CSS variables. */
+* { box-sizing: border-box; -webkit-box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: #0b0d10; color: #e8eaed;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none; user-select: none; overflow: hidden;
+  -webkit-transition: opacity 1s; transition: opacity 1s;
+}
+body.dim #app { opacity: 0.35; }
+.flex { display: -webkit-box; display: -webkit-flex; display: flex; }
+.col { -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
+.grow { -webkit-box-flex: 1; -webkit-flex: 1 1 0; flex: 1 1 0; min-width: 0; min-height: 0; }
+.center { -webkit-align-items: center; align-items: center; }
+.between { -webkit-justify-content: space-between; justify-content: space-between; }
+.wrap { -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+
+#app { height: 100%; padding: 18px 20px 14px; }
+#top { margin-bottom: 14px; }
+#clock { font-size: 84px; font-weight: 200; letter-spacing: -2px; line-height: 1; }
+#date { font-size: 22px; color: #9aa0a6; margin-top: 4px; }
+#now { text-align: right; }
+#nowMain { font-size: 64px; font-weight: 200; line-height: 1; }
+#nowMain .ico { font-size: 54px; margin-right: 10px; vertical-align: 6px; }
+#nowSub { font-size: 17px; color: #9aa0a6; margin-top: 6px; }
+
+#main { }
+#left { margin-right: 14px; overflow: hidden; }
+#right { overflow: hidden; }
+.card { background: #15191f; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; overflow: hidden; }
+.cardh { font-size: 15px; font-weight: 600; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+.cardh .sub { text-transform: none; letter-spacing: 0; font-weight: 400; color: #6f757c; margin-left: 6px; }
+.muted { color: #6f757c; font-size: 15px; }
+.err { color: #f28b82; font-size: 14px; margin-top: 4px; }
+
+.row { padding: 6px 0; border-top: 1px solid #222831; }
+.row:first-of-type { border-top: 0; }
+.badge { display: inline-block; min-width: 44px; padding: 3px 7px; border-radius: 6px; font-size: 15px; font-weight: 700; text-align: center; margin-right: 10px; color: #fff; white-space: nowrap; }
+.dest { font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dest small { display: block; font-size: 13px; color: #6f757c; }
+.mins { font-size: 22px; font-weight: 600; margin-left: 10px; white-space: nowrap; text-align: right; min-width: 64px; }
+.mins.due { color: #fdd663; }
+
+.lrow { padding: 6px 0; border-top: 1px solid #222831; }
+.lrow:first-of-type { border-top: 0; }
+.ldesc { font-size: 17px; font-weight: 600; color: #fdd663; }
+.ldesc.bad { color: #f28b82; }
+.lreason { font-size: 13px; color: #9aa0a6; margin-top: 2px; line-height: 1.3; }
+.pill { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 700; margin: 0 5px 5px 0; color: #fff; }
+.okline { font-size: 15px; color: #81c995; margin: 2px 0 6px; }
+
+.hours { margin-bottom: 8px; }
+.hour { text-align: center; }
+.hour .h { font-size: 13px; color: #6f757c; }
+.hour .i { font-size: 22px; margin: 2px 0; }
+.hour .t { font-size: 16px; }
+.hour .p { font-size: 12px; color: #8ab4f8; }
+.day { padding: 5px 0; border-top: 1px solid #222831; font-size: 17px; }
+.day .dn { width: 54px; color: #9aa0a6; }
+.day .di { width: 36px; font-size: 20px; }
+.day .dp { width: 50px; color: #8ab4f8; font-size: 14px; }
+.day .dt { text-align: right; }
+.day .lo { color: #6f757c; margin-left: 8px; }
+
+#foot { font-size: 12px; color: #4a5058; }
+#gear { font-size: 22px; color: #6f757c; padding: 4px 8px; cursor: pointer; }
+
+/* Settings */
+#settings { display: none; position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: #0b0d10; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 20px; z-index: 10; -webkit-user-select: text; user-select: text; }
+#settings.open { display: block; }
+#settings h2 { font-size: 26px; font-weight: 600; margin-bottom: 14px; }
+#settings h3 { font-size: 16px; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.6px; margin: 18px 0 8px; }
+#settings input[type=text], #settings input[type=number] { font-size: 18px; padding: 9px 10px; border-radius: 8px; border: 1px solid #2c333c; background: #15191f; color: #e8eaed; -webkit-appearance: none; }
+#settings input[type=text] { width: 60%; }
+#settings input[type=number] { width: 80px; }
+.btn { display: inline-block; font-size: 17px; padding: 9px 14px; border-radius: 8px; background: #2c333c; color: #e8eaed; border: 0; margin: 0 6px 6px 0; cursor: pointer; -webkit-appearance: none; }
+.btn.primary { background: #1a73e8; }
+.btn.small { font-size: 14px; padding: 6px 10px; }
+.opt { padding: 10px 12px; background: #15191f; border-radius: 8px; margin-bottom: 6px; font-size: 17px; cursor: pointer; }
+.opt small { color: #6f757c; margin-left: 6px; }
+.chk { display: inline-block; margin: 0 14px 8px 0; font-size: 16px; }
+.chk input { margin-right: 5px; }
+.note { font-size: 14px; color: #6f757c; margin-top: 6px; line-height: 1.4; }
+
+@media (orientation: portrait) {
+  #main { -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
+  #left { margin-right: 0; }
+  #clock { font-size: 72px; }
+}
+</style>
+</head>
+<body>
+<div id="app" class="flex col">
+  <div id="top" class="flex between">
+    <div>
+      <div id="clock">--:--</div>
+      <div id="date"></div>
+    </div>
+    <div id="now">
+      <div id="nowMain"></div>
+      <div id="nowSub"></div>
+    </div>
+  </div>
+  <div id="main" class="flex grow">
+    <div id="left" class="grow" style="-webkit-flex-grow:1.35;flex-grow:1.35;"></div>
+    <div id="right" class="grow">
+      <div class="card" id="statusCard"><div class="cardh">Line status</div><div id="status" class="muted">Loading…</div></div>
+      <div class="card" id="fcCard"><div class="cardh" id="fcHead">Forecast</div><div id="forecast" class="muted">Loading…</div></div>
+    </div>
+  </div>
+  <div id="foot" class="flex between center">
+    <div id="updated"></div>
+    <div id="gear">⚙︎</div>
+  </div>
+</div>
+
+<div id="settings">
+  <div class="flex between center"><h2>Settings</h2><div><span class="btn primary" id="saveBtn">Save &amp; close</span></div></div>
+
+  <h3>Weather location</h3>
+  <div>Current: <b id="curLoc"></b></div>
+  <div style="margin-top:8px"><input type="text" id="locQ" placeholder="Town or area, e.g. Hackney"> <span class="btn" id="locGo">Search</span></div>
+  <div id="locRes"></div>
+
+  <h3>Stops &amp; stations</h3>
+  <div id="stopList"></div>
+  <div style="margin-top:8px"><input type="text" id="stopQ" placeholder="Station or road, e.g. Stratford"> <span class="btn" id="stopGo">Search</span></div>
+  <div id="stopRes"></div>
+  <div class="note">Search a station or bus stop name, pick a result, then add the specific stop. For buses, each side of the road is a separate stop (look at the letter and the "towards" direction).</div>
+
+  <h3>Line status</h3>
+  <label class="chk"><input type="checkbox" id="disOnly"> Only list lines with problems</label>
+  <div class="note" style="margin-bottom:8px">Tick the lines you care about (none ticked = show all).</div>
+  <div id="lineChecks" class="muted">Line list loads after the first status update.</div>
+
+  <h3>Night dimming</h3>
+  <div>Dim from <input type="number" id="dimFrom" min="0" max="24"> to <input type="number" id="dimTo" min="0" max="24"> (24h hours; same number = never)</div>
+
+  <h3>Arrivals per stop</h3>
+  <div><input type="number" id="maxArr" min="1" max="12"></div>
+
+  <h3>TfL app key (optional)</h3>
+  <div><input type="text" id="appKey" placeholder="Leave blank unless you hit rate limits"></div>
+  <div class="note">Free from api-portal.tfl.gov.uk. Not needed for a single dashboard.</div>
+</div>
+
+<script>
+/* ===== Default settings (can also be changed from the ⚙︎ screen on the iPad) ===== */
+var DEFAULTS = {
+  weather: { name: 'London', lat: 51.5072, lon: -0.1276 },
+  stops: [],            /* e.g. [{ id: '940GZZLUSTD', name: 'Stratford', sub: 'Tube, DLR' }] */
+  lines: [],            /* line ids to show in status; empty = all */
+  disruptionsOnly: false,
+  dimFrom: 23, dimTo: 6,
+  maxArrivals: 6,
+  appKey: ''
+};
+var STATUS_MODES = 'tube,elizabeth-line,dlr,overground,tram';
+
+/* ===== Helpers (ES5 only, for old Safari) ===== */
+var STORE = 'homedash_v1';
+var cfg = loadCfg();
+
+function loadCfg() {
+  var c = JSON.parse(JSON.stringify(DEFAULTS)), s = null;
+  try { s = JSON.parse(window.localStorage.getItem(STORE)); } catch (e) {}
+  if (s) { for (var k in s) { if (s.hasOwnProperty(k)) c[k] = s[k]; } }
+  return c;
+}
+function saveCfg() { try { window.localStorage.setItem(STORE, JSON.stringify(cfg)); } catch (e) {} }
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function hm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function get(url, ok, fail) {
+  var x = new XMLHttpRequest();
+  x.open('GET', url, true);
+  x.timeout = 20000;
+  x.onreadystatechange = function () {
+    if (x.readyState !== 4) return;
+    if (x.status >= 200 && x.status < 300) {
+      var d; try { d = JSON.parse(x.responseText); } catch (e) { if (fail) fail('Bad response'); return; }
+      ok(d);
+    } else if (fail) { fail(x.status ? 'Error ' + x.status : 'No connection'); }
+  };
+  x.ontimeout = function () { if (fail) fail('Timed out'); };
+  x.send();
+}
+function tfl(path) {
+  var u = 'https://api.tfl.gov.uk' + path;
+  if (cfg.appKey) u += (u.indexOf('?') > -1 ? '&' : '?') + 'app_key=' + encodeURIComponent(cfg.appKey);
+  return u;
+}
+function cleanName(s) {
+  return String(s || '').replace(/ (Underground|DLR|Rail|Elizabeth line|Overground|Tram) Station$/i, '').replace(/ Station$/, '').replace(/ \(London\)$/, '');
+}
+
+var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+var FULLDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+var LINE_COLOURS = {
+  bakerloo: '#b36305', central: '#e32017', circle: '#ffd300', district: '#00782a',
+  'hammersmith-city': '#f3a9bb', jubilee: '#a0a5a9', metropolitan: '#9b0056', northern: '#000000',
+  piccadilly: '#003688', victoria: '#0098d4', 'waterloo-city': '#95cdba', elizabeth: '#6950a1',
+  dlr: '#00a4a7', tram: '#5fb526', liberty: '#61686b', lioness: '#ffa600', mildmay: '#006fe6',
+  suffragette: '#18a95d', weaver: '#9b0058', windrush: '#dc241f'
+};
+var DARK_TEXT = { circle: 1, 'hammersmith-city': 1, 'waterloo-city': 1, lioness: 1, jubilee: 1 };
+function lineStyle(id, mode) {
+  var bg = LINE_COLOURS[id] || (mode === 'bus' ? '#dc241f' : (mode === 'national-rail' ? '#3c4043' : '#5f6368'));
+  var s = 'background:' + bg + ';';
+  if (DARK_TEXT[id]) s += 'color:#111;';
+  if (id === 'northern') s += 'box-shadow:inset 0 0 0 1px #777;';
+  return s;
+}
+
+/* ===== Clock & night dimming ===== */
+function tickClock() {
+  var d = new Date();
+  $('clock').innerHTML = hm(d);
+  $('date').innerHTML = FULLDAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+  var h = d.getHours(), f = +cfg.dimFrom, t = +cfg.dimTo, dim = false;
+  if (f !== t) dim = f < t ? (h >= f && h < t) : (h >= f || h < t);
+  document.body.className = dim ? 'dim' : '';
+}
+
+/* ===== Weather (Open-Meteo, no key needed) ===== */
+function wIcon(code, isDay) {
+  if (code === 0) return isDay === 0 ? '🌙' : '☀️';
+  if (code === 1 || code === 2) return isDay === 0 ? '☁️' : '⛅';
+  if (code === 3) return '☁️';
+  if (code === 45 || code === 48) return '🌫️';
+  if (code >= 51 && code <= 57) return '🌦️';
+  if (code >= 61 && code <= 67) return '🌧️';
+  if (code >= 71 && code <= 77) return '🌨️';
+  if (code >= 80 && code <= 82) return '🌦️';
+  if (code === 85 || code === 86) return '🌨️';
+  if (code >= 95) return '⛈️';
+  return '·';
+}
+function wText(code) {
+  if (code === 0) return 'Clear';
+  if (code === 1) return 'Mostly clear';
+  if (code === 2) return 'Partly cloudy';
+  if (code === 3) return 'Overcast';
+  if (code === 45 || code === 48) return 'Fog';
+  if (code >= 51 && code <= 57) return 'Drizzle';
+  if (code >= 61 && code <= 67) return 'Rain';
+  if (code >= 71 && code <= 77) return 'Snow';
+  if (code >= 80 && code <= 82) return 'Showers';
+  if (code === 85 || code === 86) return 'Snow showers';
+  if (code >= 95) return 'Thunderstorms';
+  return '';
+}
+function loadWeather() {
+  var w = cfg.weather;
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + w.lat + '&longitude=' + w.lon +
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
+    '&hourly=temperature_2m,precipitation_probability,weather_code,is_day' +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
+    '&timezone=Europe%2FLondon&wind_speed_unit=mph&forecast_days=5';
+  get(url, renderWeather, function (e) {
+    $('forecast').innerHTML = '<div class="err">Weather unavailable (' + esc(e) + ')</div>';
+  });
+}
+function renderWeather(d) {
+  var c = d.current, dl = d.daily, hr = d.hourly;
+  $('nowMain').innerHTML = '<span class="ico">' + wIcon(c.weather_code, c.is_day) + '</span>' + Math.round(c.temperature_2m) + '°';
+  var now = c.time.substr(0, 13);
+  var sunTxt = '';
+  var nowMs = Date.now();
+  var sr = dl.sunrise[0].substr(11, 5), ss = dl.sunset[0].substr(11, 5);
+  sunTxt = (c.time.substr(11, 5) < ss && c.time.substr(11, 5) > sr) ? 'Sunset ' + ss : 'Sunrise ' + (c.time.substr(11, 5) >= ss ? dl.sunrise[1].substr(11, 5) : sr);
+  $('nowSub').innerHTML = esc(wText(c.weather_code)) + ' · Feels ' + Math.round(c.apparent_temperature) + '° · Wind ' + Math.round(c.wind_speed_10m) + ' mph · ' + sunTxt;
+
+  var start = 0;
+  for (var i = 0; i < hr.time.length; i++) { if (hr.time[i].substr(0, 13) === now) { start = i + 1; break; } }
+  var h = '<div class="flex hours">';
+  for (var j = start; j < start + 8 && j < hr.time.length; j++) {
+    var p = hr.precipitation_probability[j];
+    h += '<div class="hour grow"><div class="h">' + hr.time[j].substr(11, 2) + '</div><div class="i">' + wIcon(hr.weather_code[j], hr.is_day[j]) +
+      '</div><div class="t">' + Math.round(hr.temperature_2m[j]) + '°</div><div class="p">' + (p >= 10 ? p + '%' : '&nbsp;') + '</div></div>';
+  }
+  h += '</div>';
+  for (var k = 0; k < dl.time.length && k < 5; k++) {
+    var ds = dl.time[k].split('-');
+    var dd = new Date(+ds[0], +ds[1] - 1, +ds[2]);
+    var pp = dl.precipitation_probability_max[k];
+    h += '<div class="day flex center"><div class="dn">' + (k === 0 ? 'Today' : DAYS[dd.getDay()]) + '</div><div class="di">' + wIcon(dl.weather_code[k], 1) +
+      '</div><div class="dp">' + (pp >= 10 ? pp + '%' : '') + '</div><div class="grow dt">' + Math.round(dl.temperature_2m_max[k]) + '°<span class="lo">' + Math.round(dl.temperature_2m_min[k]) + '°</span></div></div>';
+  }
+  $('forecast').className = '';
+  $('forecast').innerHTML = h;
+  $('fcHead').innerHTML = 'Forecast<span class="sub">' + esc(cfg.weather.name) + '</span>';
+  markUpdated();
+}
+
+/* ===== TfL line status ===== */
+var lastStatus = [];
+function loadStatus() {
+  get(tfl('/Line/Mode/' + STATUS_MODES + '/Status'), function (d) { lastStatus = d; renderStatus(); markUpdated(); },
+    function (e) { $('status').innerHTML = '<div class="err">TfL status unavailable (' + esc(e) + ')</div>'; });
+}
+function inList(arr, v) { for (var i = 0; i < arr.length; i++) if (arr[i] === v) return true; return false; }
+function renderStatus() {
+  var bad = [], good = [];
+  for (var i = 0; i < lastStatus.length; i++) {
+    var l = lastStatus[i];
+    if (cfg.lines.length && !inList(cfg.lines, l.id)) continue;
+    var worst = 10, descs = [], reason = '';
+    for (var j = 0; j < l.lineStatuses.length; j++) {
+      var s = l.lineStatuses[j];
+      if (s.statusSeverity !== 10 && s.statusSeverity !== 18) {
+        if (s.statusSeverity < worst || worst === 10) worst = s.statusSeverity;
+        if (!inList(descs, s.statusSeverityDescription)) descs.push(s.statusSeverityDescription);
+        if (!reason && s.reason) reason = s.reason;
+      }
+    }
+    if (descs.length) bad.push({ l: l, worst: worst, desc: descs.join(', '), reason: reason });
+    else good.push(l);
+  }
+  bad.sort(function (a, b) { return a.worst - b.worst; });
+  var h = '';
+  for (var k = 0; k < bad.length; k++) {
+    var b = bad[k];
+    var r = b.reason.replace(/^[A-Z0-9 &\-\/]+:\s*/, '');
+    if (r.length > 150) r = r.substr(0, 147) + '…';
+    var severe = b.worst <= 6 || b.worst === 20; /* closures/suspensions/severe delays */
+    h += '<div class="lrow"><span class="pill" style="' + lineStyle(b.l.id, b.l.modeName) + '">' + esc(b.l.name) + '</span>' +
+      '<span class="ldesc' + (severe ? ' bad' : '') + '">' + esc(b.desc) + '</span>' +
+      (r ? '<div class="lreason">' + esc(r) + '</div>' : '') + '</div>';
+  }
+  if (good.length) {
+    if (cfg.disruptionsOnly) {
+      h += '<div class="okline">' + (bad.length ? 'Good service on all other lines' : 'Good service on all lines') + '</div>';
+    } else {
+      h += '<div class="okline">Good service</div><div>';
+      for (var g = 0; g < good.length; g++) h += '<span class="pill" style="' + lineStyle(good[g].id, good[g].modeName) + '">' + esc(good[g].name) + '</span>';
+      h += '</div>';
+    }
+  }
+  $('status').className = '';
+  $('status').innerHTML = h || '<div class="muted">No lines selected.</div>';
+}
+
+/* ===== TfL arrivals ===== */
+var arrivals = {}; /* id -> { at: ms, list: [...], err: '' } */
+function loadArrivals() {
+  if (!cfg.stops.length) { renderArrivals(); return; }
+  for (var i = 0; i < cfg.stops.length; i++) (function (id) {
+    get(tfl('/StopPoint/' + encodeURIComponent(id) + '/Arrivals'), function (d) {
+      arrivals[id] = { at: Date.now(), list: d, err: '' }; renderArrivals(); markUpdated();
+    }, function (e) {
+      if (!arrivals[id]) arrivals[id] = { at: Date.now(), list: [], err: '' };
+      arrivals[id].err = e; renderArrivals();
+    });
+  })(cfg.stops[i].id);
+}
+function renderArrivals() {
+  if (!cfg.stops.length) {
+    $('left').innerHTML = '<div class="card"><div class="cardh">Departures</div><div class="muted">Tap ⚙︎ (bottom right) to add your stations and bus stops.</div></div>';
+    return;
+  }
+  var h = '', now = Date.now();
+  for (var i = 0; i < cfg.stops.length; i++) {
+    var st = cfg.stops[i], a = arrivals[st.id];
+    h += '<div class="card"><div class="cardh">' + esc(st.name) + (st.sub ? '<span class="sub">' + esc(st.sub) + '</span>' : '') + '</div>';
+    if (!a) { h += '<div class="muted">Loading…</div></div>'; continue; }
+    var list = [];
+    for (var j = 0; j < a.list.length; j++) {
+      var it = a.list[j];
+      var secs = it.timeToStation - Math.round((now - a.at) / 1000);
+      if (secs < -20) continue;
+      list.push({ it: it, secs: secs });
+    }
+    list.sort(function (x, y) { return x.secs - y.secs; });
+    if (!list.length) h += '<div class="muted">No departures listed right now.</div>';
+    for (var k = 0; k < list.length && k < cfg.maxArrivals; k++) {
+      var e = list[k].it, s = list[k].secs, m = Math.floor(s / 60);
+      var dest = cleanName(e.destinationName || e.towards || 'Check front of train');
+      var plat = e.platformName && e.platformName !== 'null' ? e.platformName : '';
+      if (e.modeName === 'bus') plat = '';
+      h += '<div class="row flex center"><span class="badge" style="' + lineStyle(e.lineId, e.modeName) + '">' + esc(e.modeName === 'bus' ? e.lineName : shortLine(e)) + '</span>' +
+        '<div class="dest grow">' + esc(dest) + (plat ? '<small>' + esc(plat) + '</small>' : '') + '</div>' +
+        '<div class="mins' + (m < 1 ? ' due' : '') + '">' + (m < 1 ? 'Due' : m + ' min') + '</div></div>';
+    }
+    if (a.err) h += '<div class="err">Update failed (' + esc(a.err) + ') — showing last known times</div>';
+    h += '</div>';
+  }
+  $('left').innerHTML = h;
+}
+function shortLine(e) {
+  var n = e.lineName || '';
+  if (e.lineId === 'hammersmith-city') return 'H&C';
+  if (e.lineId === 'waterloo-city') return 'W&C';
+  if (e.lineId === 'elizabeth') return 'Elizabeth';
+  if (e.lineId === 'metropolitan') return 'Met';
+  return n.replace(/ line$/i, '');
+}
+
+function markUpdated() { $('updated').innerHTML = 'Updated ' + hm(new Date()); }
+
+/* ===== Settings screen ===== */
+function openSettings() {
+  $('curLoc').innerHTML = esc(cfg.weather.name);
+  $('disOnly').checked = !!cfg.disruptionsOnly;
+  $('dimFrom').value = cfg.dimFrom; $('dimTo').value = cfg.dimTo;
+  $('maxArr').value = cfg.maxArrivals; $('appKey').value = cfg.appKey || '';
+  $('locRes').innerHTML = ''; $('stopRes').innerHTML = '';
+  renderStopList(); renderLineChecks();
+  $('settings').className = 'open';
+}
+function closeSettings() {
+  cfg.disruptionsOnly = $('disOnly').checked;
+  cfg.dimFrom = parseInt($('dimFrom').value, 10) || 0;
+  cfg.dimTo = parseInt($('dimTo').value, 10) || 0;
+  cfg.maxArrivals = Math.max(1, Math.min(12, parseInt($('maxArr').value, 10) || 6));
+  cfg.appKey = $('appKey').value.replace(/\s/g, '');
+  var boxes = $('lineChecks').getElementsByTagName('input');
+  if (boxes.length) {
+    cfg.lines = [];
+    for (var i = 0; i < boxes.length; i++) if (boxes[i].checked) cfg.lines.push(boxes[i].value);
+  }
+  saveCfg();
+  $('settings').className = '';
+  tickClock(); renderStatus(); loadWeather(); loadArrivals();
+}
+function renderStopList() {
+  if (!cfg.stops.length) { $('stopList').innerHTML = '<div class="muted">No stops added yet.</div>'; return; }
+  var h = '';
+  for (var i = 0; i < cfg.stops.length; i++) {
+    h += '<div class="opt flex between center"><div>' + esc(cfg.stops[i].name) + '<small>' + esc(cfg.stops[i].sub || '') + '</small></div><div>' +
+      (i > 0 ? '<span class="btn small" data-act="up" data-i="' + i + '">↑</span>' : '') +
+      '<span class="btn small" data-act="rm" data-i="' + i + '">Remove</span></div></div>';
+  }
+  $('stopList').innerHTML = h;
+}
+function renderLineChecks() {
+  if (!lastStatus.length) return;
+  var h = '';
+  for (var i = 0; i < lastStatus.length; i++) {
+    var l = lastStatus[i];
+    h += '<label class="chk"><input type="checkbox" value="' + esc(l.id) + '"' + (inList(cfg.lines, l.id) ? ' checked' : '') + '>' + esc(l.name) + '</label>';
+  }
+  $('lineChecks').className = '';
+  $('lineChecks').innerHTML = h;
+}
+
+var locResults = [], stopResults = [], stopCandidates = [];
+function searchLoc() {
+  var q = $('locQ').value; if (!q) return;
+  $('locRes').innerHTML = '<div class="muted">Searching…</div>';
+  get('https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&countryCode=GB&name=' + encodeURIComponent(q), function (d) {
+    locResults = d.results || [];
+    var h = '';
+    for (var i = 0; i < locResults.length; i++) {
+      var r = locResults[i];
+      h += '<div class="opt" data-act="loc" data-i="' + i + '">' + esc(r.name) + '<small>' + esc([r.admin2, r.admin1].join(', ').replace(/^, |, $/g, '')) + '</small></div>';
+    }
+    $('locRes').innerHTML = h || '<div class="muted">Nothing found.</div>';
+  }, function (e) { $('locRes').innerHTML = '<div class="err">' + esc(e) + '</div>'; });
+}
+function searchStop() {
+  var q = $('stopQ').value; if (!q) return;
+  $('stopRes').innerHTML = '<div class="muted">Searching…</div>';
+  get(tfl('/StopPoint/Search/' + encodeURIComponent(q) + '?modes=tube,dlr,overground,elizabeth-line,bus,tram,national-rail&maxResults=12'), function (d) {
+    stopResults = d.matches || [];
+    var h = '';
+    for (var i = 0; i < stopResults.length; i++) {
+      var m = stopResults[i];
+      h += '<div class="opt" data-act="stop" data-i="' + i + '">' + esc(m.name) + '<small>' + esc((m.modes || []).join(', ')) + '</small></div>';
+    }
+    $('stopRes').innerHTML = h || '<div class="muted">Nothing found.</div>';
+  }, function (e) { $('stopRes').innerHTML = '<div class="err">' + esc(e) + '</div>'; });
+}
+var USABLE = { NaptanMetroStation: 1, NaptanRailStation: 1, NaptanPublicBusCoachTram: 1, NaptanFerryPort: 1 };
+function collectStops(sp, out) {
+  if (USABLE[sp.stopType] && sp.lines && sp.lines.length) { out.push(sp); return; }
+  var ch = sp.children || [];
+  for (var i = 0; i < ch.length; i++) collectStops(ch[i], out);
+}
+function towardsOf(sp) {
+  var ap = sp.additionalProperties || [];
+  for (var i = 0; i < ap.length; i++) if (ap[i].key === 'Towards' && ap[i].value) return ap[i].value;
+  return '';
+}
+function pickStop(i) {
+  var m = stopResults[i];
+  $('stopRes').innerHTML = '<div class="muted">Loading stops at ' + esc(m.name) + '…</div>';
+  get(tfl('/StopPoint/' + encodeURIComponent(m.id)), function (sp) {
+    var out = []; collectStops(sp, out);
+    stopCandidates = [];
+    var h = '';
+    for (var k = 0; k < out.length; k++) {
+      var s = out[k], lines = [];
+      for (var j = 0; j < s.lines.length; j++) lines.push(s.lines[j].name);
+      var isBus = s.stopType === 'NaptanPublicBusCoachTram';
+      var name = cleanName(s.commonName) + (isBus && (s.stopLetter || s.indicator) ? ' (' + (s.stopLetter ? 'Stop ' + s.stopLetter : s.indicator) + ')' : '');
+      var tw = towardsOf(s);
+      var sub = isBus ? (lines.join(', ') + (tw ? ' → ' + tw : '')) : (s.modes || []).join(', ');
+      stopCandidates.push({ id: s.naptanId || s.id, name: name, sub: sub });
+      h += '<div class="opt flex between center"><div>' + esc(name) + '<small>' + esc(sub) + '</small></div><span class="btn small primary" data-act="add" data-i="' + k + '">Add</span></div>';
+    }
+    $('stopRes').innerHTML = h || '<div class="muted">No live departure stops found there.</div>';
+  }, function (e) { $('stopRes').innerHTML = '<div class="err">' + esc(e) + '</div>'; });
+}
+
+document.addEventListener('click', function (ev) {
+  var t = ev.target;
+  while (t && t !== document && !(t.getAttribute && t.getAttribute('data-act'))) {
+    if (t.id === 'gear') { openSettings(); return; }
+    if (t.id === 'saveBtn') { closeSettings(); return; }
+    if (t.id === 'locGo') { searchLoc(); return; }
+    if (t.id === 'stopGo') { searchStop(); return; }
+    t = t.parentNode;
+  }
+  if (!t || t === document) return;
+  var act = t.getAttribute('data-act'), i = parseInt(t.getAttribute('data-i'), 10);
+  if (act === 'loc') {
+    var r = locResults[i];
+    cfg.weather = { name: r.name, lat: r.latitude, lon: r.longitude };
+    $('curLoc').innerHTML = esc(r.name); $('locRes').innerHTML = '';
+  } else if (act === 'stop') { pickStop(i); }
+  else if (act === 'add') {
+    var c = stopCandidates[i], dup = false;
+    for (var k = 0; k < cfg.stops.length; k++) if (cfg.stops[k].id === c.id) dup = true;
+    if (!dup) cfg.stops.push(c);
+    t.innerHTML = 'Added'; renderStopList();
+  } else if (act === 'rm') { cfg.stops.splice(i, 1); renderStopList(); }
+  else if (act === 'up') { var x = cfg.stops[i]; cfg.stops[i] = cfg.stops[i - 1]; cfg.stops[i - 1] = x; renderStopList(); }
+}, false);
+$('locQ').onkeydown = function (e) { if (e.keyCode === 13) searchLoc(); };
+$('stopQ').onkeydown = function (e) { if (e.keyCode === 13) searchStop(); };
+
+/* ===== Start ===== */
+tickClock(); renderArrivals();
+loadWeather(); loadStatus(); loadArrivals();
+setInterval(tickClock, 10000);
+setInterval(function () { if (!$('settings').className) renderArrivals(); }, 15000); /* count down between fetches */
+setInterval(loadArrivals, 30000);
+setInterval(loadStatus, 120000);
+setInterval(loadWeather, 900000);
+setTimeout(function () { location.reload(); }, 6 * 3600 * 1000); /* fresh start every 6h keeps old iPads stable */
+</script>
+</body>
+</html>
