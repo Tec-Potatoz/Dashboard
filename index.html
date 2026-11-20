@@ -48,19 +48,36 @@ body.dim #app { opacity: 0.45; }
 
 #app { position: relative; height: 100%; padding: 18px 22px 12px; -webkit-transition: opacity 1s; transition: opacity 1s; }
 #top { margin-bottom: 14px; text-shadow: 0 1px 12px rgba(0,0,0,0.25); }
-#clock { font-size: 96px; font-weight: 200; letter-spacing: -3px; line-height: 0.95; }
+#clock { font-size: 92px; font-weight: 200; letter-spacing: -3px; line-height: 0.95; }
 #date { font-size: 22px; color: rgba(255,255,255,0.78); margin-top: 6px; letter-spacing: 0.2px; }
-#now { text-align: right; }
-#nowMain { font-size: 68px; font-weight: 200; line-height: 1; }
-#nowMain .ico { font-size: 52px; margin-right: 10px; vertical-align: 8px; }
-#nowSub { font-size: 17px; color: rgba(255,255,255,0.78); margin-top: 8px; }
+#clockBox { margin-right: 22px; }
+
+/* Weather banner: now + hour-by-hour through the day */
+#wx { padding: 10px 6px 8px 16px; text-shadow: none; }
+#now { padding-right: 14px; margin-right: 4px; border-right: 1px solid rgba(255,255,255,0.14); white-space: nowrap; }
+#nowMain { font-size: 50px; font-weight: 200; line-height: 1; }
+#nowMain .ico { font-size: 36px; margin-right: 6px; vertical-align: 6px; }
+#nowSub { font-size: 14px; color: rgba(255,255,255,0.75); margin-top: 6px; line-height: 1.35; }
+#dayStrip { -webkit-align-items: flex-end; align-items: flex-end; }
+.hc { text-align: center; min-width: 0; }
+.hc .h { font-size: 12px; color: rgba(255,255,255,0.55); white-space: nowrap; }
+.hc .i { font-size: 21px; margin: 3px 0 1px; }
+.hc .t { font-size: 17px; font-weight: 300; }
+.hc .rb { position: relative; height: 16px; margin: 3px 7px 0; border-radius: 3px; background: rgba(255,255,255,0.05); overflow: hidden; }
+.hc .rb i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(150,190,255,0.75); }
+.hc .rp { font-size: 10px; color: #a9cbff; height: 12px; line-height: 12px; margin-top: 1px; }
+.hc.now .h { color: #fff; font-weight: 600; }
+.hc.newday { border-left: 1px solid rgba(255,255,255,0.14); }
+.hc.newday .h { color: #fff; font-weight: 600; }
+.hc.sun .h { color: #ffd7a8; }
+.hc.sun .t { font-size: 13px; color: #ffd7a8; padding-top: 3px; height: 21px; }
 
 /* Glass: translucent + blur where supported, a touch more opaque where not */
-.card, #rain, #wk { background: rgba(10,16,30,0.62); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; }
+.card, #rain, #wk, #wx { background: rgba(10,16,30,0.62); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; }
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .card, #rain, #wk { background: rgba(10,16,30,0.40); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); }
+  .card, #rain, #wk, #wx { background: rgba(10,16,30,0.40); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); }
 }
-body.lite .card, body.lite #rain, body.lite #wk { background: rgba(10,16,30,0.66); -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.lite .card, body.lite #rain, body.lite #wk, body.lite #wx { background: rgba(10,16,30,0.66); -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 /* Rain banner: hidden unless rain is due in the next few hours */
 #rain { display: none; padding: 11px 16px; margin-bottom: 12px; font-size: 21px; background-color: rgba(40,80,150,0.45); }
@@ -91,11 +108,11 @@ body.lite .card, body.lite #rain, body.lite #wk { background: rgba(10,16,30,0.66
 .fit1 .goodfull { display: none; }                      /* 1: good-service pills -> one line */
 .fit1 .goodshort { display: block; }
 .fit2 #status .lreason { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } /* 2: reasons to 2 lines */
-.fit3 #forecast .day { display: none; }                 /* 3: drop 5-day rows */
-.fit3 #forecast .hours { margin-bottom: 0; }
-.fit4 #status .lreason { -webkit-line-clamp: 1; }       /* 4: reasons to 1 line */
-.fit5 #fcCard { display: none; }                        /* 5: drop forecast card */
-.fit6 #status .lreason { display: none; }               /* 6: drop reasons */
+.fit3 #status .lreason { -webkit-line-clamp: 1; }       /* 3: reasons to 1 line */
+.fit4 #forecast .day:nth-child(n+4) { display: none; } /* 4: 5 days -> 3 */
+.fit5 #forecast .day:nth-child(n+3) { display: none; } /* 5: 3 days -> 2 */
+.fit6 #fcCard { display: none; }                        /* 6: drop forecast card */
+.fit7 #status .lreason { display: none; }               /* 7: drop reasons */
 .card { padding: 12px 16px; margin-bottom: 12px; overflow: hidden; }
 .cardh { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.60); text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 8px; }
 .cardh .sub { text-transform: none; letter-spacing: 0; font-weight: 400; color: rgba(255,255,255,0.45); margin-left: 6px; font-size: 14px; }
@@ -118,13 +135,8 @@ body.lite .card, body.lite #rain, body.lite #wk { background: rgba(10,16,30,0.66
 .pill { display: inline-block; padding: 3px 9px; border-radius: 7px; font-size: 13px; font-weight: 700; margin: 0 5px 5px 0; color: #fff; }
 .okline { font-size: 15px; color: #a8e6b8; margin: 2px 0 6px; }
 
-.hours { margin-bottom: 8px; }
-.hour { text-align: center; }
-.hour .h { font-size: 13px; color: rgba(255,255,255,0.50); }
-.hour .i { font-size: 22px; margin: 3px 0; }
-.hour .t { font-size: 17px; font-weight: 300; }
-.hour .p { font-size: 12px; color: #a9cbff; }
-.day { padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.08); font-size: 17px; }
+.day { padding: 4px 0; border-top: 1px solid rgba(255,255,255,0.08); font-size: 17px; }
+.day:first-child { border-top: 0; }
 .day .dn { width: 56px; color: rgba(255,255,255,0.66); }
 .day .di { width: 36px; font-size: 20px; }
 .day .dp { width: 50px; color: #a9cbff; font-size: 14px; }
@@ -155,7 +167,12 @@ body.lite .card, body.lite #rain, body.lite #wk { background: rgba(10,16,30,0.66
 @media (orientation: portrait) {
   #main { -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
   #left { margin-right: 0; margin-bottom: 12px; -webkit-box-flex: 1 !important; -webkit-flex-grow: 1 !important; flex-grow: 1 !important; }
-  #clock { font-size: 80px; }
+  #right { -webkit-box-flex: 0; -webkit-flex: 0 0 auto; flex: 0 0 auto; max-height: 55%; }
+  #clock { font-size: 64px; letter-spacing: -2px; }
+  #date { font-size: 17px; }
+  #clockBox { margin-right: 14px; }
+  #nowMain { font-size: 40px; }
+  #nowMain .ico { font-size: 28px; }
 }
 </style>
 </head>
@@ -165,14 +182,17 @@ body.lite .card, body.lite #rain, body.lite #wk { background: rgba(10,16,30,0.66
 <div id="rainfx"><div class="tilt" id="rainTilt"></div></div>
 <div id="shade"></div>
 <div id="app" class="flex col">
-  <div id="top" class="flex between">
-    <div>
+  <div id="top" class="flex center">
+    <div id="clockBox">
       <div id="clock" class="num">--:--</div>
       <div id="date"></div>
     </div>
-    <div id="now">
-      <div id="nowMain" class="num"></div>
-      <div id="nowSub"></div>
+    <div id="wx" class="flex grow center">
+      <div id="now">
+        <div id="nowMain" class="num"></div>
+        <div id="nowSub"></div>
+      </div>
+      <div id="dayStrip" class="flex grow"></div>
     </div>
   </div>
   <div id="rain"></div>
@@ -439,15 +459,13 @@ function renderWeather(d) {
   var c = d.current, dl = d.daily, hr = d.hourly;
   $('nowMain').innerHTML = '<span class="ico">' + wIcon(c.weather_code, c.is_day) + '</span>' + Math.round(c.temperature_2m) + '°';
   var now = c.time.substr(0, 13);
-  var sunTxt = '';
-  var sr = dl.sunrise[0].substr(11, 5), ss = dl.sunset[0].substr(11, 5);
-  sunTxt = (c.time.substr(11, 5) < ss && c.time.substr(11, 5) > sr) ? 'Sunset ' + ss : 'Sunrise ' + (c.time.substr(11, 5) >= ss ? dl.sunrise[1].substr(11, 5) : sr);
-  $('nowSub').innerHTML = esc(wText(c.weather_code)) + ' · Feels ' + Math.round(c.apparent_temperature) + '° · Wind ' + Math.round(c.wind_speed_10m) + ' mph · ' + sunTxt;
+  $('nowSub').innerHTML = esc(wText(c.weather_code)) + '<br>Feels ' + Math.round(c.apparent_temperature) + '° · ' + Math.round(c.wind_speed_10m) + ' mph';
 
   var cur = 0;
   for (var i = 0; i < hr.time.length; i++) { if (hr.time[i].substr(0, 13) === now) { cur = i; break; } }
-  var start = cur + 1;
   renderRain(c, hr, cur);
+  lastWx = { c: c, hr: hr, dl: dl, cur: cur };
+  renderDayStrip();
 
   SKY.sr = hhmmToMin(dl.sunrise[0]); SKY.ss = hhmmToMin(dl.sunset[0]);
   SKY.cloud = Math.max(0, Math.min(1, (c.cloud_cover == null ? 30 : c.cloud_cover) / 100));
@@ -455,13 +473,7 @@ function renderWeather(d) {
   SKY.snow = isSnowCode(c.weather_code);
   lastSkyMin = -1; tickClock();
 
-  var h = '<div class="flex hours">';
-  for (var j = start; j < start + 8 && j < hr.time.length; j++) {
-    var p = hr.precipitation_probability[j];
-    h += '<div class="hour grow"><div class="h">' + hr.time[j].substr(11, 2) + '</div><div class="i">' + wIcon(hr.weather_code[j], hr.is_day[j]) +
-      '</div><div class="t num">' + Math.round(hr.temperature_2m[j]) + '°</div><div class="p">' + (p >= 10 ? p + '%' : '&nbsp;') + '</div></div>';
-  }
-  h += '</div>';
+  var h = '';
   for (var k = 0; k < dl.time.length && k < 5; k++) {
     var ds = dl.time[k].split('-');
     var dd = new Date(+ds[0], +ds[1] - 1, +ds[2]);
@@ -471,8 +483,43 @@ function renderWeather(d) {
   }
   $('forecast').className = '';
   $('forecast').innerHTML = h;
-  $('fcHead').innerHTML = 'Forecast<span class="sub">' + esc(cfg.weather.name) + '</span>';
+  $('fcHead').innerHTML = 'Next 5 days<span class="sub">' + esc(cfg.weather.name) + '</span>';
   markUpdated();
+}
+
+/* ===== Hour-by-hour strip in the weather banner ===== */
+var lastWx = null;
+function hourCol(cls, label, icon, temp, pct) {
+  var p = pct || 0;
+  return '<div class="hc grow ' + cls + '"><div class="h">' + label + '</div><div class="i">' + icon + '</div><div class="t num">' + temp + '</div>' +
+    '<div class="rb"><i style="height:' + Math.min(100, p) + '%"></i></div><div class="rp num">' + (p >= 20 ? p + '%' : '') + '</div></div>';
+}
+function renderDayStrip() {
+  if (!lastWx) return;
+  var c = lastWx.c, hr = lastWx.hr, dl = lastWx.dl, cur = lastWx.cur, el = $('dayStrip');
+  /* As many hourly columns as fit the banner's width */
+  var n = Math.max(5, Math.min(18, Math.floor((el.clientWidth || 500) / 46)));
+  /* Sunrise/sunset in the window get their own marker column */
+  var suns = [];
+  for (var d = 0; d < 2; d++) {
+    if (dl.sunrise[d]) suns.push({ t: dl.sunrise[d], ico: '🌅', name: 'Sunrise' });
+    if (dl.sunset[d]) suns.push({ t: dl.sunset[d], ico: '🌇', name: 'Sunset' });
+  }
+  var cols = [], used = 0, today = c.time.substr(0, 10);
+  cols.push(hourCol('now', 'Now', wIcon(c.weather_code, c.is_day), Math.round(c.temperature_2m) + '°', hr.precipitation_probability[cur]));
+  for (var j = cur + 1; j < hr.time.length && cols.length < n; j++) {
+    for (var s = 0; s < suns.length; s++) {
+      var st = suns[s].t;
+      if (st.substr(0, 13) === hr.time[j - 1].substr(0, 13) && st > c.time && cols.length < n - 1) {
+        cols.push(hourCol('sun', suns[s].name, suns[s].ico, st.substr(11, 5), 0));
+      }
+    }
+    var t = hr.time[j], hh = t.substr(11, 2), newDay = hh === '00' && t.substr(0, 10) !== today;
+    var ds = t.substr(0, 10).split('-');
+    var label = newDay ? DAYS[new Date(+ds[0], +ds[1] - 1, +ds[2]).getDay()] : hh;
+    cols.push(hourCol(newDay ? 'newday' : '', label, wIcon(hr.weather_code[j], hr.is_day[j]), Math.round(hr.temperature_2m[j]) + '°', hr.precipitation_probability[j]));
+  }
+  el.innerHTML = cols.join('');
 }
 
 /* ===== Rain banner ===== */
@@ -630,7 +677,8 @@ function renderWeekend(d) {
 
 /* ===== TfL arrivals ===== */
 var arrivals = {}; /* id -> { at: ms, list: [...], err: '' } */
-var arrLimit = 0;  /* set by fitLeft when not every arrival fits */
+var arrLimits = {};  /* stop id -> rows shown, set by fitLeft when not everything fits */
+var arrShown = {};   /* stop id -> rows actually drawn */
 function loadArrivals() {
   if (!cfg.stops.length) { renderArrivals(); return; }
   for (var i = 0; i < cfg.stops.length; i++) (function (id) {
@@ -662,7 +710,9 @@ function drawArrivals() {
     }
     list.sort(function (x, y) { return x.secs - y.secs; });
     if (!list.length) h += '<div class="muted">No departures listed right now.</div>';
-    for (var k = 0; k < list.length && k < (arrLimit || cfg.maxArrivals); k++) {
+    var lim = arrLimits[st.id] || cfg.maxArrivals;
+    arrShown[st.id] = Math.min(list.length, lim);
+    for (var k = 0; k < list.length && k < lim; k++) {
       var e = list[k].it, s = list[k].secs, m = Math.floor(s / 60);
       var dest = cleanName(e.destinationName || e.towards || 'Check front of train');
       var plat = e.platformName && e.platformName !== 'null' ? e.platformName : '';
@@ -694,16 +744,26 @@ function overflows(el) {
   return bottom > el.clientHeight + 1;
 }
 function fitRight() {
-  var r = $('right'), steps = ['fit1', 'fit2', 'fit3', 'fit4', 'fit5', 'fit6'];
+  var r = $('right'), steps = ['fit1', 'fit2', 'fit3', 'fit4', 'fit5', 'fit6', 'fit7'];
   for (var lv = 0; lv <= steps.length; lv++) {
     r.className = 'grow' + (lv ? ' ' + steps.slice(0, lv).join(' ') : '');
     if (!overflows(r)) break;
   }
 }
 function fitLeft() {
-  var l = $('left'), n = cfg.maxArrivals;
-  if (arrLimit) { arrLimit = 0; drawArrivals(); }
-  while (overflows(l) && n > 1) { arrLimit = --n; drawArrivals(); }
+  var l = $('left'), had = false;
+  for (var k in arrLimits) had = true;
+  if (had) { arrLimits = {}; drawArrivals(); }
+  /* Trim one row at a time from whichever stop is showing the most (later stops first on ties) */
+  for (var guard = 0; guard < 60 && overflows(l); guard++) {
+    var best = null, most = 1;
+    for (var i = cfg.stops.length - 1; i >= 0; i--) {
+      var id = cfg.stops[i].id, n = arrShown[id] || 0;
+      if (n > most) { most = n; best = id; }
+    }
+    if (!best) break;
+    arrLimits[best] = most - 1; drawArrivals();
+  }
 }
 var fitTimer = null;
 function scheduleFit() {
@@ -855,7 +915,7 @@ $('stopQ').onkeydown = function (e) { if (e.keyCode === 13) searchStop(); };
 /* ===== Start ===== */
 makeStars(); makeRain();
 window.addEventListener('orientationchange', function () { setTimeout(function () { makeStars(); scheduleFit(); }, 400); }, false);
-window.addEventListener('resize', scheduleFit, false);
+window.addEventListener('resize', function () { renderDayStrip(); scheduleFit(); }, false);
 tickClock(); renderArrivals();
 loadWeather(); loadStatus(); loadArrivals();
 setInterval(tickClock, 10000);
