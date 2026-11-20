@@ -146,6 +146,53 @@ body.lite .card, body.lite #rain, body.lite #wk, body.lite #wx { background: rgb
 #foot { font-size: 12px; color: rgba(255,255,255,0.35); }
 #gear { font-size: 22px; color: rgba(255,255,255,0.45); padding: 4px 8px; cursor: pointer; }
 
+/* ===== Dancing mushroom (pure CSS, original character) ===== */
+#shroom { position: relative; width: 46px; height: 52px; margin-top: 4px; cursor: pointer; }
+body.noshroom #shroom { display: none; }
+#shroom div, #shroom i { position: absolute; display: block; }
+.sh-all { left: 0; top: 0; width: 46px; height: 50px;
+  -webkit-transform-origin: 50% 100%; transform-origin: 50% 100%;
+  -webkit-animation: boogie 1.1s ease-in-out infinite; animation: boogie 1.1s ease-in-out infinite; }
+.sh-cap { left: 0; top: 0; width: 46px; height: 24px; background: #cf7a3e; border-radius: 23px 23px 9px 9px / 20px 20px 7px 7px; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.13); }
+.sh-cap i { background: #f6dcb4; border-radius: 50%; }
+.sh-cap .s1 { left: 8px; top: 7px; width: 7px; height: 5px; }
+.sh-cap .s2 { left: 21px; top: 3px; width: 6px; height: 5px; }
+.sh-cap .s3 { left: 32px; top: 9px; width: 6px; height: 4px; }
+.sh-stem { left: 12px; top: 19px; width: 22px; height: 23px; background: #f4e6cc; border-radius: 8px 8px 10px 10px; }
+.sh-eye { top: 6px; width: 3px; height: 4px; background: #2b2118; border-radius: 2px; }
+.sh-eye.l { left: 6px; } .sh-eye.r { left: 13px; }
+.sh-mouth { left: 8px; top: 11px; width: 6px; height: 3px; border-bottom: 2px solid #2b2118; border-radius: 0 0 4px 4px; }
+.sh-blush { top: 11px; width: 4px; height: 3px; background: #f2a1a1; border-radius: 50%; opacity: 0.8; }
+.sh-blush.l { left: 2px; } .sh-blush.r { left: 16px; }
+.sh-arm { top: 28px; width: 10px; height: 3px; background: #f4e6cc; border-radius: 2px; }
+.sh-arm.l { left: 4px; -webkit-transform-origin: 100% 50%; transform-origin: 100% 50%; -webkit-animation: waveL 0.55s ease-in-out infinite alternate; animation: waveL 0.55s ease-in-out infinite alternate; }
+.sh-arm.r { left: 32px; -webkit-transform-origin: 0 50%; transform-origin: 0 50%; -webkit-animation: waveR 0.55s ease-in-out infinite alternate; animation: waveR 0.55s ease-in-out infinite alternate; }
+.sh-leg { top: 41px; width: 4px; height: 8px; background: #f4e6cc; border-radius: 2px; -webkit-animation: step 0.55s ease-in-out infinite alternate; animation: step 0.55s ease-in-out infinite alternate; }
+.sh-leg.l { left: 16px; } .sh-leg.r { left: 26px; -webkit-animation-delay: -0.55s; animation-delay: -0.55s; }
+.sh-z { display: none !important; left: 40px; top: -2px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7);
+  -webkit-animation: zz 2.4s ease-in-out infinite; animation: zz 2.4s ease-in-out infinite; }
+@-webkit-keyframes boogie { 0%, 100% { -webkit-transform: translateY(0) rotate(-7deg); } 25%, 75% { -webkit-transform: translateY(-4px) rotate(0); } 50% { -webkit-transform: translateY(0) rotate(7deg); } }
+@keyframes boogie { 0%, 100% { transform: translateY(0) rotate(-7deg); } 25%, 75% { transform: translateY(-4px) rotate(0); } 50% { transform: translateY(0) rotate(7deg); } }
+@-webkit-keyframes waveL { from { -webkit-transform: rotate(35deg); } to { -webkit-transform: rotate(-40deg); } }
+@keyframes waveL { from { transform: rotate(35deg); } to { transform: rotate(-40deg); } }
+@-webkit-keyframes waveR { from { -webkit-transform: rotate(40deg); } to { -webkit-transform: rotate(-35deg); } }
+@keyframes waveR { from { transform: rotate(40deg); } to { transform: rotate(-35deg); } }
+@-webkit-keyframes step { from { -webkit-transform: translateY(0); } to { -webkit-transform: translateY(-3px); } }
+@keyframes step { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+@-webkit-keyframes zz { 0% { opacity: 0; -webkit-transform: translate(0,6px); } 40% { opacity: 1; } 100% { opacity: 0; -webkit-transform: translate(6px,-10px); } }
+@keyframes zz { 0% { opacity: 0; transform: translate(0,6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px,-10px); } }
+/* Tap: spin-jump */
+#shroom.party .sh-all { -webkit-animation: party 0.9s ease-in-out 1; animation: party 0.9s ease-in-out 1; }
+@-webkit-keyframes party { 0% { -webkit-transform: translateY(0) rotate(0); } 40% { -webkit-transform: translateY(-22px) rotate(180deg); } 80% { -webkit-transform: translateY(0) rotate(360deg); } 90% { -webkit-transform: translateY(-4px) rotate(360deg); } 100% { -webkit-transform: translateY(0) rotate(360deg); } }
+@keyframes party { 0% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-22px) rotate(180deg); } 80% { transform: translateY(0) rotate(360deg); } 90% { transform: translateY(-4px) rotate(360deg); } 100% { transform: translateY(0) rotate(360deg); } }
+/* Night-dimming hours: asleep */
+body.dim .sh-all, body.dim .sh-arm, body.dim .sh-leg { -webkit-animation: none !important; animation: none !important; }
+body.dim .sh-arm.l { -webkit-transform: rotate(-60deg); transform: rotate(-60deg); }
+body.dim .sh-arm.r { -webkit-transform: rotate(60deg); transform: rotate(60deg); }
+body.dim .sh-eye { top: 8px; height: 1px; }
+body.dim .sh-mouth { width: 4px; left: 9px; }
+body.dim .sh-z { display: block !important; }
+
 /* Settings */
 #settings { display: none; position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: #0b0d10; color: #e8eaed; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 20px; z-index: 10; -webkit-user-select: text; user-select: text; }
 #settings.open { display: block; }
@@ -205,8 +252,17 @@ body.lite .card, body.lite #rain, body.lite #wk, body.lite #wx { background: rgb
     </div>
   </div>
   <div id="foot" class="flex between center">
-    <div id="updated"></div>
-    <div id="gear">⚙︎</div>
+    <div id="updated" class="grow"></div>
+    <div id="shroom">
+      <div class="sh-all">
+        <div class="sh-leg l"></div><div class="sh-leg r"></div>
+        <div class="sh-arm l"></div><div class="sh-arm r"></div>
+        <div class="sh-stem"><i class="sh-eye l"></i><i class="sh-eye r"></i><i class="sh-mouth"></i><i class="sh-blush l"></i><i class="sh-blush r"></i></div>
+        <div class="sh-cap"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>
+      </div>
+      <div class="sh-z">z</div>
+    </div>
+    <div class="grow" style="text-align:right"><span id="gear">⚙︎</span></div>
   </div>
 </div>
 
@@ -235,7 +291,8 @@ body.lite .card, body.lite #rain, body.lite #wk, body.lite #wx { background: rgb
   <div id="lineChecks" class="muted">Line list loads after the first status update.</div>
 
   <h3>Appearance</h3>
-  <label class="chk"><input type="checkbox" id="liteOn"> Reduce visual effects (no blur or rain animation; try this if the iPad feels sluggish)</label>
+  <label class="chk"><input type="checkbox" id="liteOn"> Reduce visual effects (no blur or rain animation; try this if the iPad feels sluggish)</label><br>
+  <label class="chk"><input type="checkbox" id="shroomOn"> Dancing mushroom 🍄</label>
 
   <h3>Night dimming</h3>
   <div>Dim from <input type="number" id="dimFrom" min="0" max="24"> to <input type="number" id="dimTo" min="0" max="24"> (24h hours; same number = never)</div>
@@ -262,7 +319,8 @@ var DEFAULTS = {
   rainHours: 12,        /* how far ahead to look */
   rainPct: 50,          /* % chance that counts as "rain likely" */
   weekendWorks: true,   /* weekend engineering works card, shown Thursday to Sunday */
-  lite: false           /* reduce visual effects for slower iPads */
+  lite: false,          /* reduce visual effects for slower iPads */
+  shroom: true          /* dancing mushroom in the footer */
 };
 var STATUS_MODES = 'tube,elizabeth-line,dlr,overground,tram';
 var WEEKEND_FROM_DAY = 4;  /* 4 = Thursday. Card shows from this day until Sunday night. */
@@ -347,6 +405,7 @@ function setBodyClass() {
   var c = [];
   if (isDim) c.push('dim');
   if (cfg.lite) c.push('lite');
+  if (!cfg.shroom) c.push('noshroom');
   if (SKY.wet && !cfg.lite) c.push(SKY.snow ? 'snowing' : 'raining');
   document.body.className = c.join(' ');
 }
@@ -771,6 +830,14 @@ function scheduleFit() {
   fitTimer = setTimeout(function () { fitTimer = null; fitRight(); fitLeft(); }, 50);
 }
 
+/* ===== Mushroom party trick ===== */
+function party() {
+  var m = $('shroom');
+  if (m.className) return;
+  m.className = 'party';
+  setTimeout(function () { m.className = ''; }, 950);
+}
+
 /* ===== Settings screen ===== */
 function openSettings() {
   $('curLoc').innerHTML = esc(cfg.weather.name);
@@ -779,6 +846,7 @@ function openSettings() {
   $('rainOn').checked = !!cfg.rainBanner;
   $('rainHours').value = cfg.rainHours; $('rainPct').value = cfg.rainPct;
   $('liteOn').checked = !!cfg.lite;
+  $('shroomOn').checked = !!cfg.shroom;
   $('dimFrom').value = cfg.dimFrom; $('dimTo').value = cfg.dimTo;
   $('maxArr').value = cfg.maxArrivals; $('appKey').value = cfg.appKey || '';
   $('locRes').innerHTML = ''; $('stopRes').innerHTML = '';
@@ -790,6 +858,7 @@ function closeSettings() {
   cfg.weekendWorks = $('wkOn').checked;
   cfg.rainBanner = $('rainOn').checked;
   cfg.lite = $('liteOn').checked;
+  cfg.shroom = $('shroomOn').checked;
   cfg.rainHours = Math.max(1, Math.min(24, parseInt($('rainHours').value, 10) || 12));
   cfg.rainPct = Math.max(10, Math.min(100, parseInt($('rainPct').value, 10) || 50));
   cfg.dimFrom = parseInt($('dimFrom').value, 10) || 0;
@@ -889,6 +958,7 @@ document.addEventListener('click', function (ev) {
   var t = ev.target;
   while (t && t !== document && !(t.getAttribute && t.getAttribute('data-act'))) {
     if (t.id === 'gear') { openSettings(); return; }
+    if (t.id === 'shroom') { party(); return; }
     if (t.id === 'saveBtn') { closeSettings(); return; }
     if (t.id === 'locGo') { searchLoc(); return; }
     if (t.id === 'stopGo') { searchStop(); return; }
