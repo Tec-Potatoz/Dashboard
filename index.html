@@ -13,13 +13,12 @@
 * { box-sizing: border-box; -webkit-box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  background: #0b0d10; color: #e8eaed;
+  background: #070b17; color: #fff;
   font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;
   -webkit-user-select: none; user-select: none; overflow: hidden;
-  -webkit-transition: opacity 1s; transition: opacity 1s;
 }
-body.dim #app { opacity: 0.35; }
+.num { font-variant-numeric: tabular-nums; -webkit-font-feature-settings: "tnum"; font-feature-settings: "tnum"; }
 .flex { display: -webkit-box; display: -webkit-flex; display: flex; }
 .col { -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
 .grow { -webkit-box-flex: 1; -webkit-flex: 1 1 0; flex: 1 1 0; min-width: 0; min-height: 0; }
@@ -27,73 +26,111 @@ body.dim #app { opacity: 0.35; }
 .between { -webkit-justify-content: space-between; justify-content: space-between; }
 .wrap { -webkit-flex-wrap: wrap; flex-wrap: wrap; }
 
-#app { height: 100%; padding: 18px 20px 14px; }
-#top { margin-bottom: 14px; }
-#clock { font-size: 84px; font-weight: 200; letter-spacing: -2px; line-height: 1; }
-#date { font-size: 22px; color: #9aa0a6; margin-top: 4px; }
+/* ===== Ambient sky layers (behind everything) ===== */
+#sky, #stars, #rainfx, #shade { position: fixed; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
+#sky { background: #070b17; }
+#stars { opacity: 0; -webkit-transition: opacity 60s; transition: opacity 60s; }
+#stars i { position: absolute; left: 0; top: 0; width: 2px; height: 2px; border-radius: 1px; background: transparent; }
+#rainfx { display: none; overflow: hidden; }
+body.raining #rainfx, body.snowing #rainfx { display: block; }
+#rainfx .tilt { position: absolute; left: -15%; top: -10%; width: 130%; height: 120%; -webkit-transform: rotate(9deg); transform: rotate(9deg); }
+.drop { position: absolute; top: -90px; width: 1px; height: 60px; opacity: 0.8;
+  background: -webkit-linear-gradient(top, rgba(255,255,255,0), rgba(220,235,255,0.55));
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(220,235,255,0.55));
+  -webkit-animation: fall 1s linear infinite; animation: fall 1s linear infinite; }
+body.snowing .drop { width: 4px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.7);
+  -webkit-animation-duration: 7s !important; animation-duration: 7s !important; }
+@-webkit-keyframes fall { from { -webkit-transform: translate3d(0,0,0); } to { -webkit-transform: translate3d(0,1300px,0); } }
+@keyframes fall { from { transform: translate3d(0,0,0); } to { transform: translate3d(0,1300px,0); } }
+#shade { background: #000; opacity: 0; -webkit-transition: opacity 2s; transition: opacity 2s; }
+body.dim #shade { opacity: 0.55; }
+body.dim #app { opacity: 0.45; }
+
+#app { position: relative; height: 100%; padding: 18px 22px 12px; -webkit-transition: opacity 1s; transition: opacity 1s; }
+#top { margin-bottom: 14px; text-shadow: 0 1px 12px rgba(0,0,0,0.25); }
+#clock { font-size: 96px; font-weight: 200; letter-spacing: -3px; line-height: 0.95; }
+#date { font-size: 22px; color: rgba(255,255,255,0.78); margin-top: 6px; letter-spacing: 0.2px; }
 #now { text-align: right; }
-#nowMain { font-size: 64px; font-weight: 200; line-height: 1; }
-#nowMain .ico { font-size: 54px; margin-right: 10px; vertical-align: 6px; }
-#nowSub { font-size: 17px; color: #9aa0a6; margin-top: 6px; }
+#nowMain { font-size: 68px; font-weight: 200; line-height: 1; }
+#nowMain .ico { font-size: 52px; margin-right: 10px; vertical-align: 8px; }
+#nowSub { font-size: 17px; color: rgba(255,255,255,0.78); margin-top: 8px; }
+
+/* Glass: translucent + blur where supported, a touch more opaque where not */
+.card, #rain, #wk { background: rgba(10,16,30,0.62); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .card, #rain, #wk { background: rgba(10,16,30,0.40); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); }
+}
+body.lite .card, body.lite #rain, body.lite #wk { background: rgba(10,16,30,0.66); -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 /* Rain banner: hidden unless rain is due in the next few hours */
-#rain { display: none; background: #172638; color: #aecbfa; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 21px; }
+#rain { display: none; padding: 11px 16px; margin-bottom: 12px; font-size: 21px; background-color: rgba(40,80,150,0.45); }
 #rain.on { display: block; }
-#rain.now { background: #1e3350; color: #d2e3fc; }
+#rain.now { background-color: rgba(50,100,190,0.55); }
 #rain .ico { margin-right: 8px; }
-#rain .rsub { color: #8ab4f8; font-size: 17px; margin-left: 6px; }
+/* Weekend works banner: hidden unless something is planned on your lines */
+#wk { display: none; padding: 10px 16px 6px; margin-bottom: 12px; background-color: rgba(150,95,20,0.32); }
+#wk.on { display: block; }
+#wk .wkh { width: 170px; font-size: 19px; padding-top: 2px; }
+#wk .wkh .ico { margin-right: 8px; }
+#wk .wkd { font-size: 14px; color: rgba(255,255,255,0.65); margin: 2px 0 4px 31px; }
+#wk .wkrow { margin-bottom: 5px; -webkit-align-items: flex-start; align-items: flex-start; }
+#wk .wkrow .pill { margin: 1px 10px 0 0; white-space: nowrap; }
+#wk .wkrow .grow { font-size: 15px; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+#wk .ldesc { font-size: 15px; }
+#wk .wkr { color: rgba(255,255,255,0.82); }
+#wk .wkmore { font-size: 13px; color: rgba(255,255,255,0.6); margin: 0 0 4px; }
+#rain .rsub { color: rgba(255,255,255,0.72); font-size: 17px; margin-left: 6px; }
 
 #main { }
 #left { margin-right: 14px; overflow: hidden; }
 #right { overflow: hidden; }
-.card { background: #15191f; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; overflow: hidden; }
-.cardh { font-size: 15px; font-weight: 600; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
-.cardh .sub { text-transform: none; letter-spacing: 0; font-weight: 400; color: #6f757c; margin-left: 6px; }
-.muted { color: #6f757c; font-size: 15px; }
-.err { color: #f28b82; font-size: 14px; margin-top: 4px; }
+.card { padding: 12px 16px; margin-bottom: 12px; overflow: hidden; }
+.cardh { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.60); text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 8px; }
+.cardh .sub { text-transform: none; letter-spacing: 0; font-weight: 400; color: rgba(255,255,255,0.45); margin-left: 6px; font-size: 14px; }
+.muted { color: rgba(255,255,255,0.50); font-size: 15px; }
+.err { color: #ffada6; font-size: 14px; margin-top: 4px; }
 
-.row { padding: 6px 0; border-top: 1px solid #222831; }
+.row { padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.08); }
 .row:first-of-type { border-top: 0; }
-.badge { display: inline-block; min-width: 44px; padding: 3px 7px; border-radius: 6px; font-size: 15px; font-weight: 700; text-align: center; margin-right: 10px; color: #fff; white-space: nowrap; }
-.dest { font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dest small { display: block; font-size: 13px; color: #6f757c; }
-.mins { font-size: 22px; font-weight: 600; margin-left: 10px; white-space: nowrap; text-align: right; min-width: 64px; }
-.mins.due { color: #fdd663; }
+.badge { display: inline-block; min-width: 46px; padding: 4px 8px; border-radius: 7px; font-size: 15px; font-weight: 700; text-align: center; margin-right: 12px; color: #fff; white-space: nowrap; }
+.dest { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dest small { display: block; font-size: 13px; color: rgba(255,255,255,0.50); }
+.mins { font-size: 24px; font-weight: 300; margin-left: 10px; white-space: nowrap; text-align: right; min-width: 70px; }
+.mins.due { color: #ffe08a; font-weight: 500; }
 
-.lrow { padding: 6px 0; border-top: 1px solid #222831; }
+.lrow { padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.08); }
 .lrow:first-of-type { border-top: 0; }
-.ldesc { font-size: 17px; font-weight: 600; color: #fdd663; }
-.ldesc.bad { color: #f28b82; }
-.lreason { font-size: 13px; color: #9aa0a6; margin-top: 2px; line-height: 1.3; }
-.pill { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 700; margin: 0 5px 5px 0; color: #fff; }
-.okline { font-size: 15px; color: #81c995; margin: 2px 0 6px; }
-#wkCard { display: none; }
-#wkCard.on { display: block; }
+.ldesc { font-size: 17px; font-weight: 600; color: #ffe08a; }
+.ldesc.bad { color: #ffa8a0; }
+.lreason { font-size: 13px; color: rgba(255,255,255,0.66); margin-top: 2px; line-height: 1.35; }
+.pill { display: inline-block; padding: 3px 9px; border-radius: 7px; font-size: 13px; font-weight: 700; margin: 0 5px 5px 0; color: #fff; }
+.okline { font-size: 15px; color: #a8e6b8; margin: 2px 0 6px; }
 
 .hours { margin-bottom: 8px; }
 .hour { text-align: center; }
-.hour .h { font-size: 13px; color: #6f757c; }
-.hour .i { font-size: 22px; margin: 2px 0; }
-.hour .t { font-size: 16px; }
-.hour .p { font-size: 12px; color: #8ab4f8; }
-.day { padding: 5px 0; border-top: 1px solid #222831; font-size: 17px; }
-.day .dn { width: 54px; color: #9aa0a6; }
+.hour .h { font-size: 13px; color: rgba(255,255,255,0.50); }
+.hour .i { font-size: 22px; margin: 3px 0; }
+.hour .t { font-size: 17px; font-weight: 300; }
+.hour .p { font-size: 12px; color: #a9cbff; }
+.day { padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.08); font-size: 17px; }
+.day .dn { width: 56px; color: rgba(255,255,255,0.66); }
 .day .di { width: 36px; font-size: 20px; }
-.day .dp { width: 50px; color: #8ab4f8; font-size: 14px; }
+.day .dp { width: 50px; color: #a9cbff; font-size: 14px; }
 .day .dt { text-align: right; }
-.day .lo { color: #6f757c; margin-left: 8px; }
+.day .lo { color: rgba(255,255,255,0.45); margin-left: 8px; }
 
-#foot { font-size: 12px; color: #4a5058; }
-#gear { font-size: 22px; color: #6f757c; padding: 4px 8px; cursor: pointer; }
+#foot { font-size: 12px; color: rgba(255,255,255,0.35); }
+#gear { font-size: 22px; color: rgba(255,255,255,0.45); padding: 4px 8px; cursor: pointer; }
 
 /* Settings */
-#settings { display: none; position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: #0b0d10; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 20px; z-index: 10; -webkit-user-select: text; user-select: text; }
+#settings { display: none; position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: #0b0d10; color: #e8eaed; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 20px; z-index: 10; -webkit-user-select: text; user-select: text; }
 #settings.open { display: block; }
 #settings h2 { font-size: 26px; font-weight: 600; margin-bottom: 14px; }
 #settings h3 { font-size: 16px; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.6px; margin: 18px 0 8px; }
 #settings input[type=text], #settings input[type=number] { font-size: 18px; padding: 9px 10px; border-radius: 8px; border: 1px solid #2c333c; background: #15191f; color: #e8eaed; -webkit-appearance: none; }
 #settings input[type=text] { width: 60%; }
 #settings input[type=number] { width: 80px; }
+#settings .muted { color: #6f757c; }
 .btn { display: inline-block; font-size: 17px; padding: 9px 14px; border-radius: 8px; background: #2c333c; color: #e8eaed; border: 0; margin: 0 6px 6px 0; cursor: pointer; -webkit-appearance: none; }
 .btn.primary { background: #1a73e8; }
 .btn.small { font-size: 14px; padding: 6px 10px; }
@@ -106,28 +143,32 @@ body.dim #app { opacity: 0.35; }
 @media (orientation: portrait) {
   #main { -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
   #left { margin-right: 0; }
-  #clock { font-size: 72px; }
+  #clock { font-size: 80px; }
 }
 </style>
 </head>
 <body>
+<div id="sky"></div>
+<div id="stars"></div>
+<div id="rainfx"><div class="tilt" id="rainTilt"></div></div>
+<div id="shade"></div>
 <div id="app" class="flex col">
   <div id="top" class="flex between">
     <div>
-      <div id="clock">--:--</div>
+      <div id="clock" class="num">--:--</div>
       <div id="date"></div>
     </div>
     <div id="now">
-      <div id="nowMain"></div>
+      <div id="nowMain" class="num"></div>
       <div id="nowSub"></div>
     </div>
   </div>
   <div id="rain"></div>
+  <div id="wk"></div>
   <div id="main" class="flex grow">
     <div id="left" class="grow" style="-webkit-flex-grow:1.35;flex-grow:1.35;"></div>
     <div id="right" class="grow">
       <div class="card" id="statusCard"><div class="cardh">Line status</div><div id="status" class="muted">Loading…</div></div>
-      <div class="card" id="wkCard"><div class="cardh" id="wkHead">This weekend</div><div id="weekend" class="muted">Loading…</div></div>
       <div class="card" id="fcCard"><div class="cardh" id="fcHead">Forecast</div><div id="forecast" class="muted">Loading…</div></div>
     </div>
   </div>
@@ -161,6 +202,9 @@ body.dim #app { opacity: 0.35; }
   <div class="note" style="margin-bottom:8px">Tick the lines you care about (none ticked = show all). The same lines are used for weekend works.</div>
   <div id="lineChecks" class="muted">Line list loads after the first status update.</div>
 
+  <h3>Appearance</h3>
+  <label class="chk"><input type="checkbox" id="liteOn"> Reduce visual effects (no blur or rain animation; try this if the iPad feels sluggish)</label>
+
   <h3>Night dimming</h3>
   <div>Dim from <input type="number" id="dimFrom" min="0" max="24"> to <input type="number" id="dimTo" min="0" max="24"> (24h hours; same number = never)</div>
 
@@ -185,7 +229,8 @@ var DEFAULTS = {
   rainBanner: true,     /* banner when rain is due */
   rainHours: 12,        /* how far ahead to look */
   rainPct: 50,          /* % chance that counts as "rain likely" */
-  weekendWorks: true    /* weekend engineering works card, shown Thursday to Sunday */
+  weekendWorks: true,   /* weekend engineering works card, shown Thursday to Sunday */
+  lite: false           /* reduce visual effects for slower iPads */
 };
 var STATUS_MODES = 'tube,elizabeth-line,dlr,overground,tram';
 var WEEKEND_FROM_DAY = 4;  /* 4 = Thursday. Card shows from this day until Sunday night. */
@@ -254,14 +299,90 @@ function lineStyle(id, mode) {
 }
 
 /* ===== Clock & night dimming ===== */
+var isDim = false, lastSkyMin = -1;
 function tickClock() {
   var d = new Date();
   $('clock').innerHTML = hm(d);
   $('date').innerHTML = FULLDAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
-  var h = d.getHours(), f = +cfg.dimFrom, t = +cfg.dimTo, dim = false;
-  if (f !== t) dim = f < t ? (h >= f && h < t) : (h >= f || h < t);
-  document.body.className = dim ? 'dim' : '';
+  var h = d.getHours(), f = +cfg.dimFrom, t = +cfg.dimTo;
+  isDim = false;
+  if (f !== t) isDim = f < t ? (h >= f && h < t) : (h >= f || h < t);
+  setBodyClass();
+  var m = h * 60 + d.getMinutes();
+  if (m !== lastSkyMin) { lastSkyMin = m; paintSky(m); }
 }
+function setBodyClass() {
+  var c = [];
+  if (isDim) c.push('dim');
+  if (cfg.lite) c.push('lite');
+  if (SKY.wet && !cfg.lite) c.push(SKY.snow ? 'snowing' : 'raining');
+  document.body.className = c.join(' ');
+}
+
+/* ===== Ambient sky: colours follow the real sun times, greyed by cloud ===== */
+var SKY = { sr: 7 * 60 + 30, ss: 16 * 60 + 30, cloud: 0.3, wet: false, snow: false };
+var NIGHT = ['#060a16', '#0f1a30'];
+function hex2rgb(h) { return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; }
+function mixRgb(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+function rgbStr(c) { return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')'; }
+function overcast(c, f, dark) {
+  var l = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+  var g = mixRgb(c, [l, l, l], f);
+  return [g[0] * dark, g[1] * dark, g[2] * dark];
+}
+function paintSky(m) {
+  var sr = SKY.sr, ss = SKY.ss, mid = (sr + ss) / 2;
+  /* [minute, top colour, bottom colour, starriness] */
+  var K = [
+    [sr - 90, NIGHT[0], NIGHT[1], 1],
+    [sr - 30, '#1d2347', '#4b3b63', 0.6],
+    [sr + 10, '#3a4b80', '#d9977f', 0.05],
+    [sr + 70, '#3c6aa6', '#86a9cf', 0],
+    [mid, '#356aae', '#7aa3d1', 0],
+    [ss - 70, '#3a64a0', '#a6a597', 0],
+    [ss - 5, '#2f3a6e', '#d98552', 0],
+    [ss + 40, '#1a2049', '#4a3560', 0.5],
+    [ss + 100, NIGHT[0], NIGHT[1], 1]
+  ];
+  var top = hex2rgb(NIGHT[0]), bot = hex2rgb(NIGHT[1]), stars = 1;
+  if (m > K[0][0] && m < K[K.length - 1][0]) {
+    for (var i = 0; i < K.length - 1; i++) {
+      if (m >= K[i][0] && m <= K[i + 1][0]) {
+        var t = (m - K[i][0]) / (K[i + 1][0] - K[i][0] || 1);
+        top = mixRgb(hex2rgb(K[i][1]), hex2rgb(K[i + 1][1]), t);
+        bot = mixRgb(hex2rgb(K[i][2]), hex2rgb(K[i + 1][2]), t);
+        stars = K[i][3] + (K[i + 1][3] - K[i][3]) * t;
+        break;
+      }
+    }
+  }
+  var f = (SKY.cloud * 0.6 + (SKY.wet ? 0.15 : 0)) * (1 - stars * 0.55), dark = SKY.wet ? 0.82 : 1 - SKY.cloud * 0.08;
+  top = overcast(top, f, dark); bot = overcast(bot, f, dark);
+  var el = $('sky');
+  el.style.background = '-webkit-linear-gradient(top, ' + rgbStr(top) + ', ' + rgbStr(bot) + ')';
+  el.style.background = 'linear-gradient(to bottom, ' + rgbStr(top) + ', ' + rgbStr(bot) + ')';
+  $('stars').style.opacity = (stars * (1 - SKY.cloud * 0.9)).toFixed(2);
+}
+function makeStars() {
+  var w = window.innerWidth, h = window.innerHeight, seed = 7, sh = [];
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for (var i = 0; i < 70; i++) {
+    var a = (0.25 + rnd() * 0.6).toFixed(2);
+    sh.push(Math.round(rnd() * w) + 'px ' + Math.round(rnd() * h * 0.65) + 'px 0 ' + (rnd() < 0.15 ? '0.5px' : '0') + ' rgba(255,255,255,' + a + ')');
+  }
+  $('stars').innerHTML = '<i style="box-shadow:' + sh.join(',') + '"></i>';
+}
+function makeRain() {
+  var h = '', seed = 3;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for (var i = 0; i < 46; i++) {
+    var dur = (0.7 + rnd() * 0.6).toFixed(2), del = (-rnd() * 7).toFixed(2);
+    h += '<div class="drop" style="left:' + (rnd() * 100).toFixed(1) + '%;height:' + Math.round(40 + rnd() * 40) + 'px;' +
+      '-webkit-animation-duration:' + dur + 's;animation-duration:' + dur + 's;-webkit-animation-delay:' + del + 's;animation-delay:' + del + 's"></div>';
+  }
+  $('rainTilt').innerHTML = h;
+}
+function hhmmToMin(s) { return parseInt(s.substr(11, 2), 10) * 60 + parseInt(s.substr(14, 2), 10); }
 
 /* ===== Weather (Open-Meteo, no key needed) ===== */
 function wIcon(code, isDay) {
@@ -294,7 +415,7 @@ function wText(code) {
 function loadWeather() {
   var w = cfg.weather;
   var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + w.lat + '&longitude=' + w.lon +
-    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,precipitation' +
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,precipitation,cloud_cover' +
     '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day' +
     '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
     '&timezone=Europe%2FLondon&wind_speed_unit=mph&forecast_days=5';
@@ -316,11 +437,17 @@ function renderWeather(d) {
   var start = cur + 1;
   renderRain(c, hr, cur);
 
+  SKY.sr = hhmmToMin(dl.sunrise[0]); SKY.ss = hhmmToMin(dl.sunset[0]);
+  SKY.cloud = Math.max(0, Math.min(1, (c.cloud_cover == null ? 30 : c.cloud_cover) / 100));
+  SKY.wet = (c.precipitation || 0) > 0 || isWetCode(c.weather_code);
+  SKY.snow = isSnowCode(c.weather_code);
+  lastSkyMin = -1; tickClock();
+
   var h = '<div class="flex hours">';
   for (var j = start; j < start + 8 && j < hr.time.length; j++) {
     var p = hr.precipitation_probability[j];
     h += '<div class="hour grow"><div class="h">' + hr.time[j].substr(11, 2) + '</div><div class="i">' + wIcon(hr.weather_code[j], hr.is_day[j]) +
-      '</div><div class="t">' + Math.round(hr.temperature_2m[j]) + '°</div><div class="p">' + (p >= 10 ? p + '%' : '&nbsp;') + '</div></div>';
+      '</div><div class="t num">' + Math.round(hr.temperature_2m[j]) + '°</div><div class="p">' + (p >= 10 ? p + '%' : '&nbsp;') + '</div></div>';
   }
   h += '</div>';
   for (var k = 0; k < dl.time.length && k < 5; k++) {
@@ -328,7 +455,7 @@ function renderWeather(d) {
     var dd = new Date(+ds[0], +ds[1] - 1, +ds[2]);
     var pp = dl.precipitation_probability_max[k];
     h += '<div class="day flex center"><div class="dn">' + (k === 0 ? 'Today' : DAYS[dd.getDay()]) + '</div><div class="di">' + wIcon(dl.weather_code[k], 1) +
-      '</div><div class="dp">' + (pp >= 10 ? pp + '%' : '') + '</div><div class="grow dt">' + Math.round(dl.temperature_2m_max[k]) + '°<span class="lo">' + Math.round(dl.temperature_2m_min[k]) + '°</span></div></div>';
+      '</div><div class="dp">' + (pp >= 10 ? pp + '%' : '') + '</div><div class="grow dt num">' + Math.round(dl.temperature_2m_max[k]) + '°<span class="lo">' + Math.round(dl.temperature_2m_min[k]) + '°</span></div></div>';
   }
   $('forecast').className = '';
   $('forecast').innerHTML = h;
@@ -363,7 +490,7 @@ function renderRain(c, hr, cur) {
       if (isSnowCode(hr.weather_code[k])) snow = true;
     }
     msg = (snow ? 'Snow' : 'Rain') + ' likely ' + (j === cur ? 'within the hour' : 'from ' + at(j));
-    if (k <= last) msg += ' until ' + at(k);
+    if (k <= last) msg += ' until ' + (hr.time[k].substr(0, 10) === hr.time[j].substr(0, 10) ? hr.time[k].substr(11, 5) : at(k));
     sub = peak ? '· up to ' + peak + '%' : '';
   }
   el.innerHTML = '<span class="ico">' + (snow ? '🌨️' : '☔') + '</span>' + esc(msg) + (sub ? '<span class="rsub">' + esc(sub) + '</span>' : '');
@@ -434,42 +561,56 @@ function weekendWindow() {
   var label = 'Sat ' + sat.getDate() + ' – Sun ' + sun.getDate() + ' ' + MONTHS[sun.getMonth()].substr(0, 3);
   return { from: from, to: sun, label: label };
 }
+var wkLabel = '';
 function loadWeekend() {
-  var card = $('wkCard'), win = weekendWindow();
-  if (!cfg.weekendWorks || !win) { card.className = 'card'; return; }
+  var win = weekendWindow();
+  if (!cfg.weekendWorks || !win) { $('wk').className = ''; return; }
   var ids = [];
   if (cfg.lines.length) ids = cfg.lines.slice(0);
   else for (var i = 0; i < lastStatus.length; i++) ids.push(lastStatus[i].id);
   if (!ids.length) return; /* line list not loaded yet; retried after next status update */
-  card.className = 'card on';
-  $('wkHead').innerHTML = 'This weekend<span class="sub">' + esc(win.label) + '</span>';
+  wkLabel = win.label;
   weekendAt = Date.now();
-  get(tfl('/Line/' + ids.join(',') + '/Status/' + isoLocal(win.from) + '/to/' + isoLocal(win.to)), renderWeekend, function (e) {
-    weekendAt = 0; /* retry with the next status update */
-    $('weekend').innerHTML = '<div class="err">Weekend works unavailable (' + esc(e) + ')</div>';
+  get(tfl('/Line/' + ids.join(',') + '/Status/' + isoLocal(win.from) + '/to/' + isoLocal(win.to)), renderWeekend, function () {
+    weekendAt = 0; /* keep the last banner; retry with the next status update */
   });
 }
+/* TfL reasons often open with the dates ("Saturday 21 and Sunday 22 November, ..."). The banner already says when, so drop that. */
+var DATEY = /\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b|\b(January|February|March|April|May|June|July|August|September|October|November|December)\b|\b(until|from) \d/i;
+function shortReason(s) {
+  var r = cleanReason(s, 400), c = r.indexOf(',');
+  if (c > 0 && c < 70 && DATEY.test(r.substr(0, c))) r = r.substr(c + 1).replace(/^\s+/, '');
+  return r ? r.charAt(0).toUpperCase() + r.substr(1) : '';
+}
+var WK_MAX = 3; /* most lines listed in the banner before "+N more" */
 function renderWeekend(d) {
-  var h = '';
+  var rows = [];
   for (var i = 0; i < d.length; i++) {
-    var l = d[i], descs = [], reasons = [], severe = false;
+    var l = d[i], descs = [], reason = '', severe = false;
     for (var j = 0; j < l.lineStatuses.length; j++) {
       var s = l.lineStatuses[j], sev = s.statusSeverity;
       /* Skip: 10 good service, 18 no step-free, 19 information, 20 normal overnight closure */
       if (sev === 10 || sev === 18 || sev === 19 || sev === 20) continue;
       if (sev <= 6) severe = true;
       if (!inList(descs, s.statusSeverityDescription)) descs.push(s.statusSeverityDescription);
-      var r = cleanReason(s.reason, 170);
-      if (r && !inList(reasons, r)) reasons.push(r);
+      if (!reason && s.reason) reason = shortReason(s.reason);
     }
-    if (!descs.length) continue;
-    h += '<div class="lrow"><span class="pill" style="' + lineStyle(l.id, l.modeName) + '">' + esc(l.name) + '</span>' +
-      '<span class="ldesc' + (severe ? ' bad' : '') + '">' + esc(descs.join(', ')) + '</span>';
-    for (var k = 0; k < reasons.length && k < 2; k++) h += '<div class="lreason">' + esc(reasons[k]) + '</div>';
-    h += '</div>';
+    if (descs.length) rows.push({ l: l, desc: descs.join(', '), reason: reason, severe: severe });
   }
-  $('weekend').className = '';
-  $('weekend').innerHTML = h || '<div class="okline">No planned closures on ' + (cfg.lines.length ? 'your' : 'any') + ' lines</div>';
+  var el = $('wk');
+  if (!rows.length) { el.className = ''; return; }
+  rows.sort(function (a, b) { return (b.severe ? 1 : 0) - (a.severe ? 1 : 0); });
+  var h = '<div class="flex"><div class="wkh"><div><span class="ico">🚧</span>This weekend</div><div class="wkd">' + esc(wkLabel) + '</div></div><div class="grow">';
+  for (var k = 0; k < rows.length && k < WK_MAX; k++) {
+    var r = rows[k];
+    h += '<div class="wkrow flex"><span class="pill" style="' + lineStyle(r.l.id, r.l.modeName) + '">' + esc(r.l.name) + '</span>' +
+      '<div class="grow"><span class="ldesc' + (r.severe ? ' bad' : '') + '">' + esc(r.desc) + '</span>' +
+      (r.reason ? '<span class="wkr"> · ' + esc(r.reason) + '</span>' : '') + '</div></div>';
+  }
+  if (rows.length > WK_MAX) h += '<div class="wkmore">+ ' + (rows.length - WK_MAX) + ' more line' + (rows.length - WK_MAX > 1 ? 's' : '') + ' affected</div>';
+  h += '</div></div>';
+  el.innerHTML = h;
+  el.className = 'on';
   markUpdated();
 }
 
@@ -512,7 +653,7 @@ function renderArrivals() {
       if (e.modeName === 'bus') plat = '';
       h += '<div class="row flex center"><span class="badge" style="' + lineStyle(e.lineId, e.modeName) + '">' + esc(e.modeName === 'bus' ? e.lineName : shortLine(e)) + '</span>' +
         '<div class="dest grow">' + esc(dest) + (plat ? '<small>' + esc(plat) + '</small>' : '') + '</div>' +
-        '<div class="mins' + (m < 1 ? ' due' : '') + '">' + (m < 1 ? 'Due' : m + ' min') + '</div></div>';
+        '<div class="mins num' + (m < 1 ? ' due' : '') + '">' + (m < 1 ? 'Due' : m + ' min') + '</div></div>';
     }
     if (a.err) h += '<div class="err">Update failed (' + esc(a.err) + ') — showing last known times</div>';
     h += '</div>';
@@ -537,6 +678,7 @@ function openSettings() {
   $('wkOn').checked = !!cfg.weekendWorks;
   $('rainOn').checked = !!cfg.rainBanner;
   $('rainHours').value = cfg.rainHours; $('rainPct').value = cfg.rainPct;
+  $('liteOn').checked = !!cfg.lite;
   $('dimFrom').value = cfg.dimFrom; $('dimTo').value = cfg.dimTo;
   $('maxArr').value = cfg.maxArrivals; $('appKey').value = cfg.appKey || '';
   $('locRes').innerHTML = ''; $('stopRes').innerHTML = '';
@@ -547,6 +689,7 @@ function closeSettings() {
   cfg.disruptionsOnly = $('disOnly').checked;
   cfg.weekendWorks = $('wkOn').checked;
   cfg.rainBanner = $('rainOn').checked;
+  cfg.lite = $('liteOn').checked;
   cfg.rainHours = Math.max(1, Math.min(24, parseInt($('rainHours').value, 10) || 12));
   cfg.rainPct = Math.max(10, Math.min(100, parseInt($('rainPct').value, 10) || 50));
   cfg.dimFrom = parseInt($('dimFrom').value, 10) || 0;
@@ -670,6 +813,8 @@ $('locQ').onkeydown = function (e) { if (e.keyCode === 13) searchLoc(); };
 $('stopQ').onkeydown = function (e) { if (e.keyCode === 13) searchStop(); };
 
 /* ===== Start ===== */
+makeStars(); makeRain();
+window.addEventListener('orientationchange', function () { setTimeout(makeStars, 400); }, false);
 tickClock(); renderArrivals();
 loadWeather(); loadStatus(); loadArrivals();
 setInterval(tickClock, 10000);
