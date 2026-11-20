@@ -36,6 +36,13 @@ body.dim #app { opacity: 0.35; }
 #nowMain .ico { font-size: 54px; margin-right: 10px; vertical-align: 6px; }
 #nowSub { font-size: 17px; color: #9aa0a6; margin-top: 6px; }
 
+/* Rain banner: hidden unless rain is due in the next few hours */
+#rain { display: none; background: #172638; color: #aecbfa; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 21px; }
+#rain.on { display: block; }
+#rain.now { background: #1e3350; color: #d2e3fc; }
+#rain .ico { margin-right: 8px; }
+#rain .rsub { color: #8ab4f8; font-size: 17px; margin-left: 6px; }
+
 #main { }
 #left { margin-right: 14px; overflow: hidden; }
 #right { overflow: hidden; }
@@ -60,6 +67,8 @@ body.dim #app { opacity: 0.35; }
 .lreason { font-size: 13px; color: #9aa0a6; margin-top: 2px; line-height: 1.3; }
 .pill { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 700; margin: 0 5px 5px 0; color: #fff; }
 .okline { font-size: 15px; color: #81c995; margin: 2px 0 6px; }
+#wkCard { display: none; }
+#wkCard.on { display: block; }
 
 .hours { margin-bottom: 8px; }
 .hour { text-align: center; }
@@ -113,10 +122,12 @@ body.dim #app { opacity: 0.35; }
       <div id="nowSub"></div>
     </div>
   </div>
+  <div id="rain"></div>
   <div id="main" class="flex grow">
     <div id="left" class="grow" style="-webkit-flex-grow:1.35;flex-grow:1.35;"></div>
     <div id="right" class="grow">
       <div class="card" id="statusCard"><div class="cardh">Line status</div><div id="status" class="muted">Loading…</div></div>
+      <div class="card" id="wkCard"><div class="cardh" id="wkHead">This weekend</div><div id="weekend" class="muted">Loading…</div></div>
       <div class="card" id="fcCard"><div class="cardh" id="fcHead">Forecast</div><div id="forecast" class="muted">Loading…</div></div>
     </div>
   </div>
@@ -134,6 +145,10 @@ body.dim #app { opacity: 0.35; }
   <div style="margin-top:8px"><input type="text" id="locQ" placeholder="Town or area, e.g. Hackney"> <span class="btn" id="locGo">Search</span></div>
   <div id="locRes"></div>
 
+  <h3>Rain banner</h3>
+  <label class="chk"><input type="checkbox" id="rainOn"> Show a banner when rain is due</label>
+  <div>Look ahead <input type="number" id="rainHours" min="1" max="24"> hours · trigger at <input type="number" id="rainPct" min="10" max="100"> % chance</div>
+
   <h3>Stops &amp; stations</h3>
   <div id="stopList"></div>
   <div style="margin-top:8px"><input type="text" id="stopQ" placeholder="Station or road, e.g. Stratford"> <span class="btn" id="stopGo">Search</span></div>
@@ -142,7 +157,8 @@ body.dim #app { opacity: 0.35; }
 
   <h3>Line status</h3>
   <label class="chk"><input type="checkbox" id="disOnly"> Only list lines with problems</label>
-  <div class="note" style="margin-bottom:8px">Tick the lines you care about (none ticked = show all).</div>
+  <label class="chk"><input type="checkbox" id="wkOn"> Show weekend engineering works (Thursday to Sunday)</label>
+  <div class="note" style="margin-bottom:8px">Tick the lines you care about (none ticked = show all). The same lines are used for weekend works.</div>
   <div id="lineChecks" class="muted">Line list loads after the first status update.</div>
 
   <h3>Night dimming</h3>
@@ -165,9 +181,14 @@ var DEFAULTS = {
   disruptionsOnly: false,
   dimFrom: 23, dimTo: 6,
   maxArrivals: 6,
-  appKey: ''
+  appKey: '',
+  rainBanner: true,     /* banner when rain is due */
+  rainHours: 12,        /* how far ahead to look */
+  rainPct: 50,          /* % chance that counts as "rain likely" */
+  weekendWorks: true    /* weekend engineering works card, shown Thursday to Sunday */
 };
 var STATUS_MODES = 'tube,elizabeth-line,dlr,overground,tram';
+var WEEKEND_FROM_DAY = 4;  /* 4 = Thursday. Card shows from this day until Sunday night. */
 
 /* ===== Helpers (ES5 only, for old Safari) ===== */
 var STORE = 'homedash_v1';
@@ -205,6 +226,11 @@ function tfl(path) {
 }
 function cleanName(s) {
   return String(s || '').replace(/ (Underground|DLR|Rail|Elizabeth line|Overground|Tram) Station$/i, '').replace(/ Station$/, '').replace(/ \(London\)$/, '');
+}
+function cleanReason(s, max) {
+  var r = String(s || '').replace(/^[A-Z0-9 &\-\/]+:\s*/, '');
+  if (r.length > max) r = r.substr(0, max - 3) + '…';
+  return r;
 }
 
 var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -268,8 +294,8 @@ function wText(code) {
 function loadWeather() {
   var w = cfg.weather;
   var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + w.lat + '&longitude=' + w.lon +
-    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
-    '&hourly=temperature_2m,precipitation_probability,weather_code,is_day' +
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,precipitation' +
+    '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day' +
     '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
     '&timezone=Europe%2FLondon&wind_speed_unit=mph&forecast_days=5';
   get(url, renderWeather, function (e) {
@@ -281,13 +307,15 @@ function renderWeather(d) {
   $('nowMain').innerHTML = '<span class="ico">' + wIcon(c.weather_code, c.is_day) + '</span>' + Math.round(c.temperature_2m) + '°';
   var now = c.time.substr(0, 13);
   var sunTxt = '';
-  var nowMs = Date.now();
   var sr = dl.sunrise[0].substr(11, 5), ss = dl.sunset[0].substr(11, 5);
   sunTxt = (c.time.substr(11, 5) < ss && c.time.substr(11, 5) > sr) ? 'Sunset ' + ss : 'Sunrise ' + (c.time.substr(11, 5) >= ss ? dl.sunrise[1].substr(11, 5) : sr);
   $('nowSub').innerHTML = esc(wText(c.weather_code)) + ' · Feels ' + Math.round(c.apparent_temperature) + '° · Wind ' + Math.round(c.wind_speed_10m) + ' mph · ' + sunTxt;
 
-  var start = 0;
-  for (var i = 0; i < hr.time.length; i++) { if (hr.time[i].substr(0, 13) === now) { start = i + 1; break; } }
+  var cur = 0;
+  for (var i = 0; i < hr.time.length; i++) { if (hr.time[i].substr(0, 13) === now) { cur = i; break; } }
+  var start = cur + 1;
+  renderRain(c, hr, cur);
+
   var h = '<div class="flex hours">';
   for (var j = start; j < start + 8 && j < hr.time.length; j++) {
     var p = hr.precipitation_probability[j];
@@ -308,11 +336,47 @@ function renderWeather(d) {
   markUpdated();
 }
 
+/* ===== Rain banner ===== */
+function isWetCode(c) { return (c >= 51 && c <= 67) || (c >= 71 && c <= 86) || c >= 95; }
+function isSnowCode(c) { return (c >= 71 && c <= 77) || c === 85 || c === 86; }
+function renderRain(c, hr, cur) {
+  var el = $('rain');
+  if (!cfg.rainBanner) { el.className = ''; return; }
+  var pct = +cfg.rainPct || 50;
+  var last = Math.min(cur + (+cfg.rainHours || 12), hr.time.length - 1);
+  var today = c.time.substr(0, 10);
+  function wet(j) { return hr.precipitation_probability[j] >= pct || (hr.precipitation[j] || 0) >= 0.5; }
+  function at(j) { return (hr.time[j].substr(0, 10) !== today ? 'tomorrow ' : '') + hr.time[j].substr(11, 5); }
+  var nowWet = (c.precipitation || 0) > 0 || isWetCode(c.weather_code);
+  var j, k, msg = '', sub = '', snow = false, peak = 0;
+
+  if (nowWet) {
+    snow = isSnowCode(c.weather_code);
+    for (j = cur + 1; j <= last; j++) if (!wet(j)) break;
+    msg = (snow ? 'Snowing' : 'Raining') + ' now';
+    sub = j <= last ? '· drier from ' + at(j) : '· set to continue for the next ' + (last - cur) + ' hours';
+  } else {
+    for (j = cur; j <= last; j++) if (wet(j)) break;
+    if (j > last) { el.className = ''; return; }
+    for (k = j; k <= last && wet(k); k++) {
+      if (hr.precipitation_probability[k] > peak) peak = hr.precipitation_probability[k];
+      if (isSnowCode(hr.weather_code[k])) snow = true;
+    }
+    msg = (snow ? 'Snow' : 'Rain') + ' likely ' + (j === cur ? 'within the hour' : 'from ' + at(j));
+    if (k <= last) msg += ' until ' + at(k);
+    sub = peak ? '· up to ' + peak + '%' : '';
+  }
+  el.innerHTML = '<span class="ico">' + (snow ? '🌨️' : '☔') + '</span>' + esc(msg) + (sub ? '<span class="rsub">' + esc(sub) + '</span>' : '');
+  el.className = nowWet ? 'on now' : 'on';
+}
+
 /* ===== TfL line status ===== */
 var lastStatus = [];
 function loadStatus() {
-  get(tfl('/Line/Mode/' + STATUS_MODES + '/Status'), function (d) { lastStatus = d; renderStatus(); markUpdated(); },
-    function (e) { $('status').innerHTML = '<div class="err">TfL status unavailable (' + esc(e) + ')</div>'; });
+  get(tfl('/Line/Mode/' + STATUS_MODES + '/Status'), function (d) {
+    lastStatus = d; renderStatus(); markUpdated();
+    if (Date.now() - weekendAt > 30 * 60000) loadWeekend();
+  }, function (e) { $('status').innerHTML = '<div class="err">TfL status unavailable (' + esc(e) + ')</div>'; });
 }
 function inList(arr, v) { for (var i = 0; i < arr.length; i++) if (arr[i] === v) return true; return false; }
 function renderStatus() {
@@ -336,8 +400,7 @@ function renderStatus() {
   var h = '';
   for (var k = 0; k < bad.length; k++) {
     var b = bad[k];
-    var r = b.reason.replace(/^[A-Z0-9 &\-\/]+:\s*/, '');
-    if (r.length > 150) r = r.substr(0, 147) + '…';
+    var r = cleanReason(b.reason, 150);
     var severe = b.worst <= 6 || b.worst === 20; /* closures/suspensions/severe delays */
     h += '<div class="lrow"><span class="pill" style="' + lineStyle(b.l.id, b.l.modeName) + '">' + esc(b.l.name) + '</span>' +
       '<span class="ldesc' + (severe ? ' bad' : '') + '">' + esc(b.desc) + '</span>' +
@@ -354,6 +417,60 @@ function renderStatus() {
   }
   $('status').className = '';
   $('status').innerHTML = h || '<div class="muted">No lines selected.</div>';
+}
+
+/* ===== TfL weekend engineering works ===== */
+var weekendAt = 0;
+function isoLocal(d) {
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';
+}
+function weekendWindow() {
+  var now = new Date(), dow = now.getDay();
+  /* Show from WEEKEND_FROM_DAY (default Thursday) until Sunday night */
+  if (!(dow === 0 || dow === 6 || dow >= WEEKEND_FROM_DAY)) return null;
+  var sat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (dow === 0 ? -1 : 6 - dow));
+  var sun = new Date(sat.getFullYear(), sat.getMonth(), sat.getDate() + 1, 23, 59);
+  var from = now > sat ? now : sat;
+  var label = 'Sat ' + sat.getDate() + ' – Sun ' + sun.getDate() + ' ' + MONTHS[sun.getMonth()].substr(0, 3);
+  return { from: from, to: sun, label: label };
+}
+function loadWeekend() {
+  var card = $('wkCard'), win = weekendWindow();
+  if (!cfg.weekendWorks || !win) { card.className = 'card'; return; }
+  var ids = [];
+  if (cfg.lines.length) ids = cfg.lines.slice(0);
+  else for (var i = 0; i < lastStatus.length; i++) ids.push(lastStatus[i].id);
+  if (!ids.length) return; /* line list not loaded yet; retried after next status update */
+  card.className = 'card on';
+  $('wkHead').innerHTML = 'This weekend<span class="sub">' + esc(win.label) + '</span>';
+  weekendAt = Date.now();
+  get(tfl('/Line/' + ids.join(',') + '/Status/' + isoLocal(win.from) + '/to/' + isoLocal(win.to)), renderWeekend, function (e) {
+    weekendAt = 0; /* retry with the next status update */
+    $('weekend').innerHTML = '<div class="err">Weekend works unavailable (' + esc(e) + ')</div>';
+  });
+}
+function renderWeekend(d) {
+  var h = '';
+  for (var i = 0; i < d.length; i++) {
+    var l = d[i], descs = [], reasons = [], severe = false;
+    for (var j = 0; j < l.lineStatuses.length; j++) {
+      var s = l.lineStatuses[j], sev = s.statusSeverity;
+      /* Skip: 10 good service, 18 no step-free, 19 information, 20 normal overnight closure */
+      if (sev === 10 || sev === 18 || sev === 19 || sev === 20) continue;
+      if (sev <= 6) severe = true;
+      if (!inList(descs, s.statusSeverityDescription)) descs.push(s.statusSeverityDescription);
+      var r = cleanReason(s.reason, 170);
+      if (r && !inList(reasons, r)) reasons.push(r);
+    }
+    if (!descs.length) continue;
+    h += '<div class="lrow"><span class="pill" style="' + lineStyle(l.id, l.modeName) + '">' + esc(l.name) + '</span>' +
+      '<span class="ldesc' + (severe ? ' bad' : '') + '">' + esc(descs.join(', ')) + '</span>';
+    for (var k = 0; k < reasons.length && k < 2; k++) h += '<div class="lreason">' + esc(reasons[k]) + '</div>';
+    h += '</div>';
+  }
+  $('weekend').className = '';
+  $('weekend').innerHTML = h || '<div class="okline">No planned closures on ' + (cfg.lines.length ? 'your' : 'any') + ' lines</div>';
+  markUpdated();
 }
 
 /* ===== TfL arrivals ===== */
@@ -417,6 +534,9 @@ function markUpdated() { $('updated').innerHTML = 'Updated ' + hm(new Date()); }
 function openSettings() {
   $('curLoc').innerHTML = esc(cfg.weather.name);
   $('disOnly').checked = !!cfg.disruptionsOnly;
+  $('wkOn').checked = !!cfg.weekendWorks;
+  $('rainOn').checked = !!cfg.rainBanner;
+  $('rainHours').value = cfg.rainHours; $('rainPct').value = cfg.rainPct;
   $('dimFrom').value = cfg.dimFrom; $('dimTo').value = cfg.dimTo;
   $('maxArr').value = cfg.maxArrivals; $('appKey').value = cfg.appKey || '';
   $('locRes').innerHTML = ''; $('stopRes').innerHTML = '';
@@ -425,6 +545,10 @@ function openSettings() {
 }
 function closeSettings() {
   cfg.disruptionsOnly = $('disOnly').checked;
+  cfg.weekendWorks = $('wkOn').checked;
+  cfg.rainBanner = $('rainOn').checked;
+  cfg.rainHours = Math.max(1, Math.min(24, parseInt($('rainHours').value, 10) || 12));
+  cfg.rainPct = Math.max(10, Math.min(100, parseInt($('rainPct').value, 10) || 50));
   cfg.dimFrom = parseInt($('dimFrom').value, 10) || 0;
   cfg.dimTo = parseInt($('dimTo').value, 10) || 0;
   cfg.maxArrivals = Math.max(1, Math.min(12, parseInt($('maxArr').value, 10) || 6));
@@ -436,7 +560,7 @@ function closeSettings() {
   }
   saveCfg();
   $('settings').className = '';
-  tickClock(); renderStatus(); loadWeather(); loadArrivals();
+  tickClock(); renderStatus(); loadWeather(); loadArrivals(); loadWeekend();
 }
 function renderStopList() {
   if (!cfg.stops.length) { $('stopList').innerHTML = '<div class="muted">No stops added yet.</div>'; return; }
@@ -551,7 +675,7 @@ loadWeather(); loadStatus(); loadArrivals();
 setInterval(tickClock, 10000);
 setInterval(function () { if (!$('settings').className) renderArrivals(); }, 15000); /* count down between fetches */
 setInterval(loadArrivals, 30000);
-setInterval(loadStatus, 120000);
+setInterval(loadStatus, 120000);  /* also refreshes weekend works every 30 min */
 setInterval(loadWeather, 900000);
 setTimeout(function () { location.reload(); }, 6 * 3600 * 1000); /* fresh start every 6h keeps old iPads stable */
 </script>
