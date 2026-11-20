@@ -918,7 +918,24 @@ window.addEventListener('orientationchange', function () { setTimeout(function (
 window.addEventListener('resize', function () { renderDayStrip(); scheduleFit(); }, false);
 tickClock(); renderArrivals();
 loadWeather(); loadStatus(); loadArrivals();
-setInterval(tickClock, 10000);
+/* Clock: wake exactly on each new minute (read from the iPad's own clock), with a safety tick in case iOS delays a timer */
+function minuteTick() {
+  tickClock();
+  setTimeout(minuteTick, 60000 - (Date.now() % 60000) + 20);
+}
+minuteTick();
+setInterval(tickClock, 5000);
+/* When the iPad wakes or Safari comes back to the front, update at once instead of waiting for the next timer */
+var lastWake = Date.now();
+function onWake() {
+  tickClock();
+  if (Date.now() - lastWake > 60000) { loadArrivals(); loadStatus(); loadWeather(); }
+  lastWake = Date.now();
+}
+document.addEventListener('visibilitychange', function () { if (!document.hidden) onWake(); }, false);
+window.addEventListener('pageshow', onWake, false);
+window.addEventListener('focus', onWake, false);
+setInterval(function () { lastWake = Date.now(); }, 30000);
 setInterval(function () { if (!$('settings').className) renderArrivals(); }, 15000); /* count down between fetches */
 setInterval(loadArrivals, 30000);
 setInterval(loadStatus, 120000);  /* also refreshes weekend works every 30 min */
